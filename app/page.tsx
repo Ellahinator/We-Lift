@@ -12,7 +12,7 @@ export default function HomePage() {
           <Breadcrumb.Item href="#" icon={HiHome}>
             <p>Home</p>
           </Breadcrumb.Item>
-          <Breadcrumb.Item href="#">Progress</Breadcrumb.Item>
+          <Breadcrumb.Item href="#"> Progress </Breadcrumb.Item>
           <Breadcrumb.Item> Weight </Breadcrumb.Item>
         </Breadcrumb>
       </div>
