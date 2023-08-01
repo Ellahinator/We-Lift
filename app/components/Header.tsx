@@ -10,32 +10,36 @@ import {
 } from "flowbite-react";
 import { useState } from "react";
 
-export default function NavbarWithDropdown() {
-  const [isSignedIn, setIsSignedIn] = useState(false); // initially, the user is not signed in
+export default function Header() {
+  const [isSignedIn, setIsSignedIn] = useState(false);
 
-  const authElement = isSignedIn ? (
-    <Dropdown inline label={<Avatar alt="User settings" rounded />}>
-      <Dropdown.Header>
-        <span className="block text-sm">Bonnie Green</span>
-        <span className="block truncate text-sm font-medium">
-          name@flowbite.com
-        </span>
-      </Dropdown.Header>
-      <Dropdown.Item>Dashboard</Dropdown.Item>
-      <Dropdown.Item>Settings</Dropdown.Item>
-      <Dropdown.Item>Earnings</Dropdown.Item>
-      <Dropdown.Divider />
-      <Dropdown.Item onClick={() => setIsSignedIn(false)}>
-        Sign out
-      </Dropdown.Item>
-    </Dropdown>
-  ) : (
-    <Button
-      onClick={() => setIsSignedIn(true)}
-      className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
-    >
-      Sign in
-    </Button>
+  const authElement = (
+    <div className="flex justify-end w-28">
+      {isSignedIn ? (
+        <Dropdown inline label={<Avatar alt="User settings" rounded />}>
+          <Dropdown.Header>
+            <span className="block text-sm">Bonnie Green</span>
+            <span className="block truncate text-sm font-medium">
+              name@flowbite.com
+            </span>
+          </Dropdown.Header>
+          <Dropdown.Item>Dashboard</Dropdown.Item>
+          <Dropdown.Item>Settings</Dropdown.Item>
+          <Dropdown.Item>Earnings</Dropdown.Item>
+          <Dropdown.Divider />
+          <Dropdown.Item onClick={() => setIsSignedIn(false)}>
+            Sign out
+          </Dropdown.Item>
+        </Dropdown>
+      ) : (
+        <Button
+          onClick={() => setIsSignedIn(true)}
+          className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
+        >
+          Sign in
+        </Button>
+      )}
+    </div>
   );
   return (
     <Flowbite>
