@@ -9,6 +9,7 @@ import {
   Flowbite,
 } from "flowbite-react";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function Header() {
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -20,7 +21,7 @@ export default function Header() {
           <Dropdown.Header>
             <span className="block text-sm">Bonnie Green</span>
             <span className="block truncate text-sm font-medium">
-              name@flowbite.com
+              name@email.com
             </span>
           </Dropdown.Header>
           <Dropdown.Item>Dashboard</Dropdown.Item>
@@ -47,10 +48,12 @@ export default function Header() {
         <div className="flex w-full justify-between">
           <div className="flex">
             <Navbar.Brand href="/">
-              <img
-                alt="Flowbite React Logo"
+              <Image
+                alt="Calorie App Logo"
                 className="mr-3 h-6 sm:h-9"
                 src="./logo.svg"
+                width={32}
+                height={32}
               />
               <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-primary-400 text-primary-700">
                 Calorie App
