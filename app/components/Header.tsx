@@ -60,7 +60,7 @@ export default function NavbarWithDropdown() {
                 href="#"
                 className="text-gray-600 dark:text-gray-300 hover:text-primary-400 dark:hover:text-primary-400"
               >
-                Home
+                <p>Home</p>
               </Navbar.Link>
               <Navbar.Link
                 active
