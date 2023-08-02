@@ -1,8 +1,9 @@
 import LoginForm from "../components/Login";
 
+// TODO: Conditional if user is logged in
 export default function LoginPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div>
       <LoginForm />
     </div>
   );

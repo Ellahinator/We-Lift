@@ -10,6 +10,7 @@ import {
 } from "flowbite-react";
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Header() {
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -24,7 +25,9 @@ export default function Header() {
               name@email.com
             </span>
           </Dropdown.Header>
-          <Dropdown.Item>Dashboard</Dropdown.Item>
+          <Dropdown.Item>
+            <Link href="/dashboard"> Dashboard</Link>
+          </Dropdown.Item>
           <Dropdown.Item>Settings</Dropdown.Item>
           <Dropdown.Item>Earnings</Dropdown.Item>
           <Dropdown.Divider />
@@ -44,7 +47,11 @@ export default function Header() {
   );
   return (
     <Flowbite>
-      <Navbar fluid className="dark:bg-gray-800 bg-gray-100" border>
+      <Navbar
+        fluid
+        className="dark:bg-gray-800 bg-gray-100 shadow-sm dark:shadow-none"
+        border
+      >
         <div className="flex w-full justify-between">
           <div className="flex">
             <Navbar.Brand href="/">
@@ -64,36 +71,36 @@ export default function Header() {
             <Navbar.Collapse>
               <Navbar.Link
                 active
-                href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-400 dark:hover:text-primary-400"
+                href="/"
+                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
               >
                 <p>Home</p>
               </Navbar.Link>
               <Navbar.Link
                 active
                 href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-400 dark:hover:text-primary-400"
+                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
               >
                 About
               </Navbar.Link>
               <Navbar.Link
                 active
                 href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-400 dark:hover:text-primary-400"
+                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
               >
                 Services
               </Navbar.Link>
               <Navbar.Link
                 active
                 href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-400 dark:hover:text-primary-400"
+                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
               >
                 Pricing
               </Navbar.Link>
               <Navbar.Link
                 active
                 href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-400 dark:hover:text-primary-400"
+                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
               >
                 Contact
               </Navbar.Link>
