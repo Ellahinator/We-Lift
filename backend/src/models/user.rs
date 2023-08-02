@@ -1,10 +1,15 @@
 use crate::jwt::decode_jwt;
 use crate::schema::users;
 use chrono::NaiveDateTime;
+use diesel::prelude::*;
+use jsonwebtoken::errors::Error;
+use rocket::http::Status;
+use rocket::request::{FromRequest, Outcome, Request};
 use rocket::serde::{Deserialize, Serialize};
+use rocket::Responder;
+use rocket::serde::json::Value;
 
 #[derive(Queryable)]
-#[serde(crate = "rocket::serde")]
 pub struct User {
     pub id: i32,
     pub username: Option<String>,
@@ -31,14 +36,27 @@ pub enum NetworkResponse {
     InternalServerError(String),
 }
 
+
+#[derive(Serialize)]
+pub enum ResponseBody {
+    Message(String),
+    AuthToken(String),
+}
+
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
+pub struct Response {
+    pub body: ResponseBody,
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Claims {
     pub subject_id: i32,
-    exp: usize
+    pub exp: usize
 }
 
 #[derive(Debug)]
-pub struct JWT {
+pub struct Jwt {
     pub claims: Claims
 }
 
@@ -114,4 +132,10 @@ impl<'r> FromRequest<'r> for Jwt {
             },
         }
     }
+}
+
+/// User information to be retrieved from the Google People API.
+#[derive(serde::Deserialize)]
+pub struct GoogleUserInfo {
+    pub names: Vec<Value>,
 }
