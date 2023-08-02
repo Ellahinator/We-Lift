@@ -6,23 +6,22 @@ use rocket::{Build, Rocket};
 use rocket_cors::{AllowedOrigins, CorsOptions, AllowedHeaders};
 use dotenvy::dotenv;
 use std::env;
+use rocket_sync_db_pools::{database, diesel};
 
 #[get("/")]
 fn index() -> &'static str {
     "Hello, world!"
 }
 
+#[database("mysql_logs")]
+pub struct LogsDbConn(diesel::MysqlConnection);
+
 #[launch]
 async fn rocket() -> Rocket<Build> {
     dotenv().ok();
-    let frontend_url = env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
+    // let frontend_url = env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
 
-    let allowed_origins = AllowedOrigins::some_exact(&[
-        frontend_url,
-        String::from("http://localhost:3000"),
-        String::from("http://127.0.0.1:3000"),
-        String::from("http://0.0.0.0:3000"),
-    ]);
+    let allowed_origins = AllowedOrigins::all();
 
     let cors = CorsOptions {
         allowed_origins,
@@ -43,5 +42,5 @@ async fn rocket() -> Rocket<Build> {
     .to_cors()
     .expect("CORS failed.");
 
-    rocket::build().mount("/", routes![index]).attach(cors)
+    rocket::build().attach(LogsDbConn::fairing()).mount("/", routes![index]).attach(cors)
 }
