@@ -3,7 +3,7 @@ import { Button, Label, TextInput, Checkbox } from "flowbite-react";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function LoginForm() {
+export default function LoginPage() {
   return (
     <section>
       <div className="flex flex-col items-center mt-8 px-6 py-8 mx-auto md:h-screen lg:py-0">
