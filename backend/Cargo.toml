@@ -18,3 +18,4 @@ jsonwebtoken = "8.3.0"
 anyhow = "1.0"
 reqwest = { version = "0.11.0", default-features = false, features = ["json", "rustls-tls"] }
 rocket_oauth2 = { version = "0.5.0-rc.2", features = ["hyper_rustls_adapter"]}
+scrypt = "0.8.0"

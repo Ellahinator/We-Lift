@@ -1,13 +1,75 @@
-use anyhow::{Context};
+use anyhow::{Context, Error};
 use reqwest::header::{ AUTHORIZATION};
 use rocket::http::{Cookie, CookieJar, SameSite};
 use rocket::response::{Debug, Redirect};
+use rocket::serde::json::Json;
 use rocket::{get};
 use rocket_oauth2::{OAuth2, TokenResponse};
 use serde_json::{self};
 
-use crate::models::*;
+use crate::jwt::create_jwt;
+use crate::{models::*, LogsDbConn};
 
+
+#[post("/register", data = "<new_user>")]
+pub async fn register(
+    conn: LogsDbConn,
+    new_user: Json<NewUser>,
+) -> Result<Json<ResponseBody>, NetworkResponse> {
+    let result = User::create(new_user.into_inner(), conn).await;
+
+    match result {
+        Ok(user) => {
+            match create_jwt(user.id) {
+                Ok(token) => {
+                    println!("Generated token: {}", token);
+                    Ok(Json(ResponseBody::AuthToken(token)))
+                },
+                Err(err) => {
+                    eprintln!("JWT token generation error: {:?}", err);
+                    Err(NetworkResponse::InternalServerError(
+                        "Failed to generate JWT token".to_string(),
+                    ))
+                }
+            }
+        },
+        Err(_) => {
+            Err(NetworkResponse::BadRequest(
+                "Failed to register user".to_string(),
+            ))
+        }
+    }
+}
+
+#[post("/login", data = "<login_user>")]
+pub async fn login(
+    conn: LogsDbConn,
+    login_user: Json<LoginUser>,
+) -> Result<Json<ResponseBody>, NetworkResponse> {
+    let result = User::find_by_login(login_user.login.clone(), login_user.password.clone(), conn).await;
+
+    match result {
+        Ok(user) => {
+            match create_jwt(user.id) {
+                Ok(token) => {
+                    println!("Generated token: {}", token);
+                    Ok(Json(ResponseBody::AuthToken(token)))
+                },
+                Err(err) => {
+                    eprintln!("JWT token generation error: {:?}", err);
+                    Err(NetworkResponse::InternalServerError(
+                        "Failed to generate JWT token".to_string(),
+                    ))
+                }
+            }
+        },
+        Err(_) => {
+            Err(NetworkResponse::Unauthorized(
+                "Failed to authorize access".to_string(),
+            ))
+        }
+    }
+}
 
 #[get("/login/google")]
 pub fn google_login(oauth2: OAuth2<GoogleUserInfo>, cookies: &CookieJar<'_>) -> Redirect {
@@ -18,7 +80,7 @@ pub fn google_login(oauth2: OAuth2<GoogleUserInfo>, cookies: &CookieJar<'_>) -> 
 pub async fn google_callback(
     token: TokenResponse<GoogleUserInfo>,
     cookies: &CookieJar<'_>,
-) -> Result<Redirect, Debug<anyhow::Error>> {
+) -> Result<Redirect, Debug<Error>> {
     // Use the token to retrieve the user's Google account information.
     let user_info: GoogleUserInfo = reqwest::Client::builder()
         .build()

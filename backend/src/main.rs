@@ -57,6 +57,6 @@ async fn rocket() -> Rocket<Build> {
     .to_cors()
     .expect("CORS failed.");
 
-    rocket::build().attach(LogsDbConn::fairing()).mount("/", routes![index, user_controller::google_login, user_controller::google_callback]).attach(OAuth2::<GoogleUserInfo>::fairing("google"))
+    rocket::build().attach(LogsDbConn::fairing()).mount("/", routes![index, user_controller::login, user_controller::register, user_controller::google_login, user_controller::google_callback]).attach(OAuth2::<GoogleUserInfo>::fairing("google"))
 .attach(cors)
 }
