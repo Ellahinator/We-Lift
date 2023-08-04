@@ -20,7 +20,11 @@ export default function Header() {
         <Dropdown
           inline
           label={
-            <Avatar alt="User settings" img={session.user!.image} rounded />
+            <Avatar
+              alt="User settings"
+              img={session.user?.image || "/logo.png"}
+              rounded
+            />
           }
         >
           <Dropdown.Header>
