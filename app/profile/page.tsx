@@ -5,17 +5,22 @@ import { MdDashboard } from "react-icons/md";
 import Dashboard from "../components/Dashboard";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { Spinner } from "flowbite-react";
 
 export default function LoginPage() {
-  const { data: session } = useSession({
+  const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
       redirect("/profile/signin");
     },
   });
 
-  if (!session) {
-    // <Loading />;
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center mt-64 h-screen">
+        <Spinner aria-label="Loading" color="purple" />
+      </div>
+    );
   }
   return (
     <section>

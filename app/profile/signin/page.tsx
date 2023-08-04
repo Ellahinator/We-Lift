@@ -5,15 +5,22 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect } from "react";
+import { Spinner } from "flowbite-react";
 
 export default function LoginPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (session) {
-      redirect("/profile");
-    }
-  }, [session]);
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center mt-64 h-screen">
+        <Spinner aria-label="Loading" color="purple" />
+      </div>
+    );
+  }
+
+  if (session) {
+    redirect("/profile");
+  }
 
   return (
     <section>

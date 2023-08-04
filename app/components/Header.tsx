@@ -9,7 +9,7 @@ import {
 } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -37,7 +37,6 @@ export default function Header() {
             <Link href="/dashboard"> Dashboard</Link>
           </Dropdown.Item>
           <Dropdown.Item>Settings</Dropdown.Item>
-          <Dropdown.Item>Earnings</Dropdown.Item>
           <Dropdown.Divider />
           <Dropdown.Item onClick={() => signOut({ callbackUrl: "/" })}>
             Sign out
@@ -45,7 +44,7 @@ export default function Header() {
         </Dropdown>
       ) : (
         <Button
-          onClick={() => signIn()}
+          href="/profile"
           className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
         >
           Sign in
@@ -66,9 +65,10 @@ export default function Header() {
               <Image
                 alt="Calorie App Logo"
                 className="mr-3 h-6 sm:h-9"
-                src="./logo.svg"
+                src="/logo.svg"
                 width={32}
                 height={32}
+                placeholder="empty"
               />
               <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-primary-400 text-primary-700">
                 Calorie App
