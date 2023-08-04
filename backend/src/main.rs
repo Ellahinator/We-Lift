@@ -18,7 +18,6 @@ use controllers::user_controller;
 
 use rocket_oauth2::OAuth2;
 
-
 #[get("/")]
 fn index() -> &'static str {
     "Hello, world!"
@@ -33,6 +32,7 @@ async fn rocket() -> Rocket<Build> {
     let frontend_url = env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
 
     let allowed_origins = AllowedOrigins::some_exact(&[
+        frontend_url,
         String::from("http://localhost:3000"),
         String::from("http://127.0.0.1:3000"),
         String::from("http://0.0.0.0:3000"),
