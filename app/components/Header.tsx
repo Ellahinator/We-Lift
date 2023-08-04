@@ -12,44 +12,47 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 
 export default function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  const loading = status === "loading";
 
   const authElement = (
     <div className="flex justify-end w-28">
-      {session ? (
-        <Dropdown
-          inline
-          label={
-            <Avatar
-              alt="User settings"
-              img={session.user?.image || "/logo.png"}
-              rounded
-            />
-          }
-        >
-          <Dropdown.Header>
-            <span className="block text-sm">{session.user!.name}</span>
-            <span className="block truncate text-sm font-medium">
-              {session.user!.email}
-            </span>
-          </Dropdown.Header>
-          <Dropdown.Item>
-            <Link href="/dashboard"> Dashboard</Link>
-          </Dropdown.Item>
-          <Dropdown.Item>Settings</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item onClick={() => signOut({ callbackUrl: "/" })}>
-            Sign out
-          </Dropdown.Item>
-        </Dropdown>
-      ) : (
-        <Button
-          href="/profile"
-          className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
-        >
-          Sign in
-        </Button>
-      )}
+      {!loading &&
+        (session ? (
+          <Dropdown
+            inline
+            label={
+              <Avatar
+                alt="User settings"
+                img={session.user?.image || "/logo.png"}
+                rounded
+              />
+            }
+          >
+            <Dropdown.Header>
+              <span className="block text-sm">{session.user!.name}</span>
+              <span className="block truncate text-sm font-medium">
+                {session.user!.email}
+              </span>
+            </Dropdown.Header>
+            <Dropdown.Item>
+              <Link href="/dashboard"> Dashboard</Link>
+            </Dropdown.Item>
+            <Dropdown.Item>Settings</Dropdown.Item>
+            <Dropdown.Divider />
+            <Dropdown.Item onClick={() => signOut({ callbackUrl: "/" })}>
+              Sign out
+            </Dropdown.Item>
+          </Dropdown>
+        ) : (
+          <Button
+            href="/profile"
+            className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
+          >
+            Sign in
+          </Button>
+        ))}
     </div>
   );
   return (
