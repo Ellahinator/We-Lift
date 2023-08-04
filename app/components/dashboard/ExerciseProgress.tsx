@@ -67,7 +67,7 @@ export default function ExerciseProgress() {
         },
       ],
     });
-  }, []);
+  }, [chartOptions]);
 
   return (
     <div className="shadow-lg rounded-2xl p-4 bg-white dark:bg-gray-800 w-full">
