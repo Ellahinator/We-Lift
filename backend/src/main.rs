@@ -24,8 +24,8 @@ fn index() -> &'static str {
     "Hello, world!"
 }
 
-#[database("mysql_logs")]
-pub struct LogsDbConn(diesel::MysqlConnection);
+#[database("postgres_logs")]
+pub struct LogsDbConn(diesel::PgConnection);
 
 #[launch]
 async fn rocket() -> Rocket<Build> {
