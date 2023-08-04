@@ -44,7 +44,7 @@ pub struct LoginUser {
 impl User {
     pub async fn create(new_user: NewUser, conn: LogsDbConn) -> Result<User, Box<dyn std::error::Error + Send + Sync>> {
         let salt = SaltString::generate(&mut OsRng);
-        let password_hash = match Scrypt.hash_password(&new_user.password_hash.as_bytes(), &salt) {
+        let password_hash = match Scrypt.hash_password(new_user.password_hash.as_bytes(), &salt) {
             Ok(hash) => hash.to_string(),
             Err(e) => return Err(Box::new(e))
         };
@@ -92,6 +92,14 @@ impl User {
             },
             Err(e) => Err(Box::new(e)),
         }
+    }
+
+    pub async fn find_by_email(email: String, conn: LogsDbConn) -> Result<User, Box<dyn std::error::Error + Send + Sync>> {
+        conn.run(move |c| {
+            users::table
+                .filter(users::email.eq(&email))
+                .first::<User>(c)
+        }).await.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
     }
 }
 
@@ -215,4 +223,5 @@ impl<'r> FromRequest<'r> for Jwt {
 #[derive(serde::Deserialize)]
 pub struct GoogleUserInfo {
     pub names: Vec<Value>,
+    pub email_addresses: Vec<Value>,
 }

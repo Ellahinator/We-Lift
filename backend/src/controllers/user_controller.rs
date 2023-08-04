@@ -15,15 +15,21 @@ use crate::{models::*, LogsDbConn};
 pub async fn register(
     conn: LogsDbConn,
     new_user: Json<NewUser>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
+    cookies: &CookieJar<'_>
+) -> Result<Redirect, NetworkResponse> {
     let result = User::create(new_user.into_inner(), conn).await;
 
     match result {
         Ok(user) => {
             match create_jwt(user.id) {
                 Ok(token) => {
-                    println!("Generated token: {}", token);
-                    Ok(Json(ResponseBody::AuthToken(token)))
+                    cookies.add_private(
+                        Cookie::build("jwt", token)
+                            .http_only(true)
+                            .same_site(SameSite::Strict)
+                            .finish(),
+                    );
+                Ok(Redirect::to("/"))
                 },
                 Err(err) => {
                     eprintln!("JWT token generation error: {:?}", err);
@@ -45,15 +51,21 @@ pub async fn register(
 pub async fn login(
     conn: LogsDbConn,
     login_user: Json<LoginUser>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
+    cookies: &CookieJar<'_>,
+) -> Result<Redirect, NetworkResponse> {
     let result = User::find_by_login(login_user.login.clone(), login_user.password.clone(), conn).await;
 
     match result {
         Ok(user) => {
             match create_jwt(user.id) {
                 Ok(token) => {
-                    println!("Generated token: {}", token);
-                    Ok(Json(ResponseBody::AuthToken(token)))
+                    cookies.add_private(
+                        Cookie::build("jwt", token)
+                            .http_only(true)
+                            .same_site(SameSite::Strict)
+                            .finish(),
+                    );
+                    Ok(Redirect::to("/"))
                 },
                 Err(err) => {
                     eprintln!("JWT token generation error: {:?}", err);
@@ -80,33 +92,65 @@ pub fn google_login(oauth2: OAuth2<GoogleUserInfo>, cookies: &CookieJar<'_>) -> 
 pub async fn google_callback(
     token: TokenResponse<GoogleUserInfo>,
     cookies: &CookieJar<'_>,
-) -> Result<Redirect, Debug<Error>> {
-    // Use the token to retrieve the user's Google account information.
-    let user_info: GoogleUserInfo = reqwest::Client::builder()
-        .build()
-        .context("failed to build reqwest client")?
-        .get("https://people.googleapis.com/v1/people/me?personFields=names")
-        .header(AUTHORIZATION, format!("Bearer {}", token.access_token()))
-        .send()
-        .await
-        .context("failed to complete request")?
-        .json()
-        .await
-        .context("failed to deserialize response")?;
+    conn: LogsDbConn,
+) -> Result<Redirect, NetworkResponse> {
+    // Build the request client.
+    let client = reqwest::Client::builder().build();
+    if client.is_err() {
+        return Err(NetworkResponse::InternalServerError("Failed to build request client".to_string()));
+    }
 
-    let real_name = user_info
-        .names
+    // Send the request.
+    let response = client.unwrap().get("https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses")
+        .header(AUTHORIZATION, format!("Bearer {}", token.access_token()))
+        .send().await;
+    if response.is_err() {
+        return Err(NetworkResponse::InternalServerError("Failed to complete request".to_string()));
+    }
+
+    // Parse the response.
+    let user_info = response.unwrap().json::<GoogleUserInfo>().await;
+    if user_info.is_err() {
+        return Err(NetworkResponse::InternalServerError("Failed to deserialize response".to_string()));
+    }
+
+    let user_info = user_info.unwrap();
+    let email = user_info
+        .email_addresses
         .first()
-        .and_then(|n| n.get("displayName"))
+        .and_then(|e| e.get("value"))
         .and_then(|s| s.as_str())
         .unwrap_or("");
 
-    // Set a private cookie with the user's name.
+    // Set a private cookie with the user's email.
     cookies.add_private(
-        Cookie::build("username", real_name.to_string())
+        Cookie::build("email", email.to_string())
             .same_site(SameSite::Lax)
             .finish(),
     );
 
-    Ok(Redirect::to("/"))
+    // Find the user by email in the database.
+    let result = User::find_by_email(email.to_string(), conn).await;
+    match result {
+        Ok(user) => {
+            match create_jwt(user.id) {
+                Ok(token) => {
+                    cookies.add_private(
+                        Cookie::build("jwt", token)
+                            .http_only(true)
+                            .same_site(SameSite::Strict)
+                            .finish(),
+                    );
+                    Ok(Redirect::to("/"))
+                },
+                Err(err) => {
+                    eprintln!("JWT token generation error: {:?}", err);
+                    Err(NetworkResponse::InternalServerError("Failed to generate JWT token".to_string()))
+                }
+            }
+        },
+        Err(_) => {
+            Err(NetworkResponse::Unauthorized("Failed to authorize access".to_string()))
+        }
+    }
 }
