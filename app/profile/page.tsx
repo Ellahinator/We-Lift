@@ -3,10 +3,22 @@ import { Tabs } from "flowbite-react";
 import { HiAdjustments, HiClipboardList, HiUserCircle } from "react-icons/hi";
 import { MdDashboard } from "react-icons/md";
 import Dashboard from "../components/Dashboard";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 export default function LoginPage() {
+  const { data: session } = useSession({
+    required: true,
+    onUnauthenticated() {
+      redirect("/profile/signin");
+    },
+  });
+
+  if (!session) {
+    // <Loading />;
+  }
   return (
-    <div>
+    <section>
       <Tabs.Group
         aria-label="Default tabs"
         style="default"
@@ -21,6 +33,6 @@ export default function LoginPage() {
         <Tabs.Item icon={HiAdjustments} title="Settings"></Tabs.Item>
         <Tabs.Item icon={HiClipboardList} title="Contacts"></Tabs.Item>
       </Tabs.Group>
-    </div>
+    </section>
   );
 }
