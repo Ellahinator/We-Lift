@@ -66,15 +66,18 @@ export default function Header() {
           <div className="flex">
             <Navbar.Brand href="/">
               <Image
-                alt="Calorie App Logo"
+                alt="We Lift Logo"
                 className="mr-3 h-6 sm:h-9"
                 src="/logo.svg"
                 width={32}
                 height={32}
                 placeholder="empty"
               />
-              <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-primary-400 text-primary-700">
-                Calorie App
+              <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-gray-100">
+                We{" "}
+                <span className="text-primary-700 dark:text-primary-400">
+                  Lift
+                </span>
               </span>
             </Navbar.Brand>
           </div>

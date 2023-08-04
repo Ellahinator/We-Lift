@@ -24,12 +24,12 @@ export default function SignupForm() {
         >
           <Image
             src="/logo.svg"
-            alt="Calorie App Logo"
+            alt="We Lift Logo"
             width={32}
             height={32}
-            className="mr-2 flex"
+            className="mr-2"
           />
-          Calorie App
+          We Lift
         </Link>
         <div className="w-full bg-white rounded-lg shadow dark:shadow-primary-950  md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:bg-opacity-30">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
