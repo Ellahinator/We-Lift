@@ -4,7 +4,6 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use jsonwebtoken::errors::Error;
 use rocket::http::Status;
-use rocket::log::private::Log;
 use rocket::request::{FromRequest, Outcome, Request};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::Responder;
