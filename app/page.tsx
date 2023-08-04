@@ -1,7 +1,5 @@
 "use client";
-import { Breadcrumb } from "flowbite-react";
 import Image from "next/image";
-import { HiHome } from "react-icons/hi";
 
 export default function HomePage() {
   return (
