@@ -2,8 +2,19 @@
 import { Button, Label, TextInput, Checkbox } from "flowbite-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { redirect } from "next/navigation";
 
 export default function SignupForm() {
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      redirect("/profile");
+    }
+  }, [session]);
+
   return (
     <section>
       <div className="flex flex-col items-center mt-8 px-6 py-8 mx-auto md:h-screen lg:py-0">

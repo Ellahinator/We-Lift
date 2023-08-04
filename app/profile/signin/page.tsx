@@ -1,9 +1,20 @@
 "use client";
 import { Button, Label, TextInput, Checkbox } from "flowbite-react";
+import { signIn, useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect } from "react";
 
 export default function LoginPage() {
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (session) {
+      redirect("/profile");
+    }
+  }, [session]);
+
   return (
     <section>
       <div className="flex flex-col items-center mt-8 px-6 py-8 mx-auto md:h-screen lg:py-0">
@@ -86,6 +97,12 @@ export default function LoginPage() {
                 className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 Sign in
+              </Button>
+              <Button
+                onClick={() => signIn("google")}
+                className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+              >
+                Sign in with Google
               </Button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don't have an account yet?{" "}

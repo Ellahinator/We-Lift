@@ -1,0 +1,12 @@
+#Environment Variables
+.env*.local
+.env
+
+# Rust Build Files
+target/
+
+# Configuration Files
+Rocket.toml
+
+# Vim Swap files
+*.swp
