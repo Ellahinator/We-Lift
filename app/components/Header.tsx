@@ -9,48 +9,50 @@ import {
 } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  const loading = status === "loading";
 
   const authElement = (
     <div className="flex justify-end w-28">
-      {session ? (
-        <Dropdown
-          inline
-          label={
-            <Avatar
-              alt="User settings"
-              img={session.user?.image || "/logo.png"}
-              rounded
-            />
-          }
-        >
-          <Dropdown.Header>
-            <span className="block text-sm">{session.user!.name}</span>
-            <span className="block truncate text-sm font-medium">
-              {session.user!.email}
-            </span>
-          </Dropdown.Header>
-          <Dropdown.Item>
-            <Link href="/dashboard"> Dashboard</Link>
-          </Dropdown.Item>
-          <Dropdown.Item>Settings</Dropdown.Item>
-          <Dropdown.Item>Earnings</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item onClick={() => signOut({ callbackUrl: "/" })}>
-            Sign out
-          </Dropdown.Item>
-        </Dropdown>
-      ) : (
-        <Button
-          onClick={() => signIn()}
-          className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
-        >
-          Sign in
-        </Button>
-      )}
+      {!loading &&
+        (session ? (
+          <Dropdown
+            inline
+            label={
+              <Avatar
+                alt="User settings"
+                img={session.user?.image || "/logo.png"}
+                rounded
+              />
+            }
+          >
+            <Dropdown.Header>
+              <span className="block text-sm">{session.user!.name}</span>
+              <span className="block truncate text-sm font-medium">
+                {session.user!.email}
+              </span>
+            </Dropdown.Header>
+            <Dropdown.Item>
+              <Link href="/dashboard"> Dashboard</Link>
+            </Dropdown.Item>
+            <Dropdown.Item>Settings</Dropdown.Item>
+            <Dropdown.Divider />
+            <Dropdown.Item onClick={() => signOut({ callbackUrl: "/" })}>
+              Sign out
+            </Dropdown.Item>
+          </Dropdown>
+        ) : (
+          <Button
+            href="/profile"
+            className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
+          >
+            Sign in
+          </Button>
+        ))}
     </div>
   );
   return (
@@ -64,14 +66,18 @@ export default function Header() {
           <div className="flex">
             <Navbar.Brand href="/">
               <Image
-                alt="Calorie App Logo"
+                alt="We Lift Logo"
                 className="mr-3 h-6 sm:h-9"
-                src="./logo.svg"
+                src="/logo.svg"
                 width={32}
                 height={32}
+                placeholder="empty"
               />
-              <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-primary-400 text-primary-700">
-                Calorie App
+              <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-gray-100">
+                We{" "}
+                <span className="text-primary-700 dark:text-primary-400">
+                  Lift
+                </span>
               </span>
             </Navbar.Brand>
           </div>
