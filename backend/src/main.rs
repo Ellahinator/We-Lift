@@ -1,17 +1,17 @@
-#[macro_use] 
+#[macro_use]
 extern crate rocket;
 
+use dotenvy::dotenv;
+use models::GoogleUserInfo;
 use rocket::http::Method;
 use rocket::{Build, Rocket};
-use rocket_cors::{AllowedOrigins, CorsOptions, AllowedHeaders};
-use dotenvy::dotenv;
-use std::env;
+use rocket_cors::{AllowedHeaders, AllowedOrigins, CorsOptions};
 use rocket_sync_db_pools::{database, diesel};
-use models::GoogleUserInfo;
+use std::env;
 
+mod jwt;
 mod models;
 mod schema;
-mod jwt;
 
 mod controllers;
 use controllers::user_controller;
@@ -57,6 +57,17 @@ async fn rocket() -> Rocket<Build> {
     .to_cors()
     .expect("CORS failed.");
 
-    rocket::build().attach(LogsDbConn::fairing()).mount("/", routes![index, user_controller::login, user_controller::register, user_controller::google_login, user_controller::google_callback]).attach(OAuth2::<GoogleUserInfo>::fairing("google"))
-.attach(cors)
+    rocket::build()
+        .attach(LogsDbConn::fairing())
+        .mount(
+            "/",
+            routes![
+                index,
+                user_controller::login,
+                user_controller::register,
+                user_controller::google_callback
+            ],
+        )
+        .attach(OAuth2::<GoogleUserInfo>::fairing("google"))
+        .attach(cors)
 }
