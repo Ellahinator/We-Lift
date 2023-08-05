@@ -214,6 +214,7 @@ dependencies = [
  "diesel",
  "dotenvy",
  "jsonwebtoken",
+ "rand",
  "reqwest",
  "rocket",
  "rocket_cors",

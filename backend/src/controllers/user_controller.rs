@@ -1,43 +1,44 @@
 use anyhow::{Context, Error};
-use reqwest::header::{ AUTHORIZATION};
+use reqwest::header::AUTHORIZATION;
+use rocket::get;
 use rocket::http::{Cookie, CookieJar, SameSite};
 use rocket::response::{Debug, Redirect};
 use rocket::serde::json::Json;
-use rocket::{get};
 use rocket_oauth2::{OAuth2, TokenResponse};
 use serde_json::{self};
 
 use crate::jwt::create_jwt;
 use crate::{models::*, LogsDbConn};
 
-
 #[post("/register", data = "<new_user>")]
 pub async fn register(
     conn: LogsDbConn,
     new_user: Json<NewUser>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
-    let result = User::create(new_user.into_inner(), conn).await;
+    cookies: &CookieJar<'_>,
+) -> Result<Redirect, NetworkResponse> {
+    let result = User::create(new_user.into_inner(), &conn).await;
 
     match result {
-        Ok(user) => {
-            match create_jwt(user.id) {
-                Ok(token) => {
-                    println!("Generated token: {}", token);
-                    Ok(Json(ResponseBody::AuthToken(token)))
-                },
-                Err(err) => {
-                    eprintln!("JWT token generation error: {:?}", err);
-                    Err(NetworkResponse::InternalServerError(
-                        "Failed to generate JWT token".to_string(),
-                    ))
-                }
+        Ok(user) => match create_jwt(user.id) {
+            Ok(token) => {
+                cookies.add_private(
+                    Cookie::build("jwt", token)
+                        .http_only(true)
+                        .same_site(SameSite::Strict)
+                        .finish(),
+                );
+                Ok(Redirect::to("/"))
+            }
+            Err(err) => {
+                eprintln!("JWT token generation error: {:?}", err);
+                Err(NetworkResponse::InternalServerError(
+                    "Failed to generate JWT token".to_string(),
+                ))
             }
         },
-        Err(_) => {
-            Err(NetworkResponse::BadRequest(
-                "Failed to register user".to_string(),
-            ))
-        }
+        Err(_) => Err(NetworkResponse::BadRequest(
+            "Failed to register user".to_string(),
+        )),
     }
 }
 
@@ -45,68 +46,99 @@ pub async fn register(
 pub async fn login(
     conn: LogsDbConn,
     login_user: Json<LoginUser>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
-    let result = User::find_by_login(login_user.login.clone(), login_user.password.clone(), conn).await;
+    cookies: &CookieJar<'_>,
+) -> Result<Redirect, NetworkResponse> {
+    let result =
+        User::find_by_login(login_user.login.clone(), login_user.password.clone(), &conn).await;
 
     match result {
-        Ok(user) => {
-            match create_jwt(user.id) {
-                Ok(token) => {
-                    println!("Generated token: {}", token);
-                    Ok(Json(ResponseBody::AuthToken(token)))
-                },
-                Err(err) => {
-                    eprintln!("JWT token generation error: {:?}", err);
-                    Err(NetworkResponse::InternalServerError(
-                        "Failed to generate JWT token".to_string(),
-                    ))
-                }
+        Ok(user) => match create_jwt(user.id) {
+            Ok(token) => {
+                cookies.add_private(
+                    Cookie::build("jwt", token)
+                        .http_only(true)
+                        .same_site(SameSite::Strict)
+                        .finish(),
+                );
+                Ok(Redirect::to("/"))
+            }
+            Err(err) => {
+                eprintln!("JWT token generation error: {:?}", err);
+                Err(NetworkResponse::InternalServerError(
+                    "Failed to generate JWT token".to_string(),
+                ))
             }
         },
-        Err(_) => {
-            Err(NetworkResponse::Unauthorized(
-                "Failed to authorize access".to_string(),
-            ))
-        }
+        Err(_) => Err(NetworkResponse::Unauthorized(
+            "Failed to authorize access".to_string(),
+        )),
     }
 }
-
-#[get("/login/google")]
-pub fn google_login(oauth2: OAuth2<GoogleUserInfo>, cookies: &CookieJar<'_>) -> Redirect {
-    oauth2.get_redirect(cookies, &["profile"]).unwrap()
-}
-
-#[get("/auth/google")]
+#[post("/auth/google", data = "<access_token>")]
 pub async fn google_callback(
-    token: TokenResponse<GoogleUserInfo>,
+    access_token: Json<AccessToken>,
+    conn: LogsDbConn,
     cookies: &CookieJar<'_>,
-) -> Result<Redirect, Debug<Error>> {
-    // Use the token to retrieve the user's Google account information.
-    let user_info: GoogleUserInfo = reqwest::Client::builder()
-        .build()
-        .context("failed to build reqwest client")?
-        .get("https://people.googleapis.com/v1/people/me?personFields=names")
-        .header(AUTHORIZATION, format!("Bearer {}", token.access_token()))
+) -> Result<Json<ResponseBody>, NetworkResponse> {
+    // Build the request client.
+    let client = reqwest::Client::builder().build().unwrap();
+
+    // Use the access token to retrieve the user's Google account information.
+    let response = client
+        .get("https://www.googleapis.com/oauth2/v1/userinfo?alt=json")
+        .header(AUTHORIZATION, format!("Bearer {}", access_token.token))
         .send()
-        .await
-        .context("failed to complete request")?
-        .json()
-        .await
-        .context("failed to deserialize response")?;
+        .await;
 
-    let real_name = user_info
-        .names
-        .first()
-        .and_then(|n| n.get("displayName"))
-        .and_then(|s| s.as_str())
-        .unwrap_or("");
+    match response {
+        Ok(response) => {
+            if response.status().is_success() {
+                let google_user: GoogleUserInfo = response.json().await.unwrap();
 
-    // Set a private cookie with the user's name.
-    cookies.add_private(
-        Cookie::build("username", real_name.to_string())
-            .same_site(SameSite::Lax)
-            .finish(),
-    );
+                let email = google_user.email.clone();
 
-    Ok(Redirect::to("/"))
+                // The user's email is used as the unique identifier for the user.
+                // Use the user's email to check if the user already exists in your database.
+                let mut user = User::find_by_email(email, &conn).await.unwrap();
+
+                // If the user does not exist, create a new user in your database.
+                if user.is_none() {
+                    let new_user = NewUser {
+                        username: None,
+                        email: google_user.email,
+                        password_hash: "NotNeeded".to_string(), // Password isn't needed for OAuth
+                    };
+                    user = Some(User::create(new_user, &conn).await.unwrap());
+                }
+
+                // Generate a JWT for the user using your create_jwt function.
+                let jwt_result = create_jwt(user.unwrap().id);
+
+                // Handle possible JWT creation error
+                match jwt_result {
+                    Ok(token) => {
+                        // Set a cookie with the JWT.
+                        cookies.add_private(
+                            Cookie::build("jwt", token.clone())
+                                .http_only(true)
+                                .same_site(SameSite::Strict)
+                                .finish(),
+                        );
+                        Ok(Json(ResponseBody::AuthToken(token)))
+                    }
+                    Err(e) => Err(NetworkResponse::InternalServerError(format!(
+                        "Failed to create JWT: {}",
+                        e
+                    ))),
+                }
+            } else {
+                Err(NetworkResponse::BadRequest(
+                    "Invalid access token".to_string(),
+                ))
+            }
+        }
+        Err(_) => Err(NetworkResponse::InternalServerError(
+            "Failed to verify access token".to_string(),
+        )),
+    }
 }
