@@ -1,8 +1,7 @@
 "use client";
 import { Avatar, Button, TextInput, Label } from "flowbite-react";
-
 import { useSession } from "next-auth/react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 export default function Settings() {
   const { data: session } = useSession();
@@ -55,12 +54,12 @@ export default function Settings() {
             <div>
               <p className="text-gray-500 dark:text-gray-400">
                 Logged in via Google. Manage your security settings in your{" "}
-                <a
+                <Link
                   href="https://myaccount.google.com/"
                   className=" text-green-500"
                 >
                   Google Account
-                </a>
+                </Link>
                 .
               </p>
             </div>
@@ -335,12 +334,12 @@ export default function Settings() {
               className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
             >
               I agree with the{" "}
-              <a
+              <Link
                 href="#"
                 className="text-primary-600 hover:underline dark:text-primary-500"
               >
                 terms and conditions
-              </a>
+              </Link>
               .
             </Label>
           </div>
