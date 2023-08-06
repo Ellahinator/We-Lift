@@ -25,9 +25,9 @@ export const authOptions: NextAuthOptions = {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(credentialDetails),
         });
-        console.log("Response", resp);
+        console.log("CredentialsProvider Response", resp);
         const user = await resp.json();
-        console.log("User", user);
+        console.log("CredentialsProvider User", user);
         if (user) {
           return user;
         } else {
@@ -38,9 +38,9 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, user }) {
-      console.log("Account", account);
       // If an access token is present, fetch a custom token from the backend
       if (account?.access_token) {
+        console.log("Google Account", account);
         const requestOptions = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -60,9 +60,12 @@ export const authOptions: NextAuthOptions = {
 
           // Extract and assign the custom token from the backend
           const data = await response.json();
+          console.log("Data", data);
           if (data?.AuthToken) {
-            console.log("Token", token);
-            token.access_token = data.AuthToken;
+            console.log("Token before", token);
+            token.jwt = data.AuthToken;
+            token.provider = account.provider;
+            console.log("Token after", token);
           }
         } catch (error) {
           console.error("Error calling backend:", error);
@@ -70,17 +73,21 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (account?.provider === "credentials") {
+        console.log("Credentials Account", account);
         if (user) {
-          console.log("User", user);
+          console.log("Credentials User", user);
+          token.jwt = user.AuthToken;
+          console.log("Token", token);
         }
       }
       return token;
     },
     session: async ({ session, token, user }) => {
       if (token) {
-        console.log("Token", token);
+        console.log("Session Token", token);
+        session.user.email = token.email;
+        session.user.provider = token.provider as string;
         console.log("Session", session);
-        session.user!.email = token.email;
       }
       return session;
     },

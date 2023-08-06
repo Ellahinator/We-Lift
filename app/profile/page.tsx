@@ -1,7 +1,8 @@
 "use client";
 import { Tabs } from "flowbite-react";
-import { HiAdjustments, HiClipboardList, HiUserCircle } from "react-icons/hi";
+import { HiAdjustments, HiUserCircle } from "react-icons/hi";
 import { MdDashboard } from "react-icons/md";
+import { FaUserFriends } from "react-icons/fa";
 import Dashboard from "../components/Dashboard";
 import Settings from "../components/Settings";
 import { useSession } from "next-auth/react";
@@ -31,7 +32,7 @@ export default function LoginPage() {
         className="flex justify-center text-gray-600 dark:text-gray-200 "
       >
         <Tabs.Item active icon={HiUserCircle} title="Profile">
-          User
+          {/* <p>{session?.user?.name} </p> */}
         </Tabs.Item>
         <Tabs.Item icon={MdDashboard} title="Dashboard">
           <Dashboard />
@@ -39,7 +40,7 @@ export default function LoginPage() {
         <Tabs.Item icon={HiAdjustments} title="Settings">
           <Settings />
         </Tabs.Item>
-        <Tabs.Item icon={HiClipboardList} title="Contacts"></Tabs.Item>
+        <Tabs.Item icon={FaUserFriends} title="Friends"></Tabs.Item>
       </Tabs.Group>
     </section>
   );

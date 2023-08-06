@@ -1,20 +1,16 @@
 "use client";
-import {
-  Avatar,
-  Breadcrumb,
-  Button,
-  Checkbox,
-  TextInput,
-  Label,
-  Select,
-  Textarea,
-} from "flowbite-react";
+import { Avatar, Button, TextInput, Label } from "flowbite-react";
+
+import { useSession } from "next-auth/react";
+import { Link } from "react-router-dom";
 
 export default function Settings() {
+  const { data: session } = useSession();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
       <div className="col-span-full xl:col-auto">
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700">
+        <div className="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
           <div className="flex items-center space-x-4 p-4 2xl:flex-col">
             <Avatar
               //   src="/images/users/bonnie-green-2x.png"
@@ -55,134 +51,149 @@ export default function Settings() {
             {" "}
             Password Information{" "}
           </h3>
-          <form action="#">
-            <div className="grid grid-cols-6 gap-6">
-              <div className="col-span-6 sm:col-span-3">
-                <Label
-                  htmlFor="current-password"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+          {session?.user!.provider === "google" ? (
+            <div>
+              <p className="text-gray-500 dark:text-gray-400">
+                Logged in via Google. Manage your security settings in your{" "}
+                <a
+                  href="https://myaccount.google.com/"
+                  className=" text-green-500"
                 >
-                  Current password
-                </Label>
-                <TextInput
-                  type="text"
-                  name="current-password"
-                  id="current-password"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <div className="col-span-6 sm:col-span-3">
-                <Label
-                  htmlFor="password"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  New password
-                </Label>
-                <TextInput
-                  data-popover-target="popover-password"
-                  data-popover-placement="bottom"
-                  type="password"
-                  id="password"
-                  placeholder="••••••••"
-                  required
-                />
-                <div
-                  data-popover
-                  id="popover-password"
-                  role="tooltip"
-                  className="absolute z-10 invisible inline-block text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 w-72 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400"
-                >
-                  <div className="p-3 space-y-2">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
-                      Must have at least 6 characters
-                    </h3>
-                    <div className="grid grid-cols-4 gap-2">
-                      <div className="h-1 bg-orange-300 dark:bg-orange-400"></div>
-                      <div className="h-1 bg-orange-300 dark:bg-orange-400"></div>
-                      <div className="h-1 bg-gray-200 dark:bg-gray-600"></div>
-                      <div className="h-1 bg-gray-200 dark:bg-gray-600"></div>
+                  Google Account
+                </a>
+                .
+              </p>
+            </div>
+          ) : (
+            <form action="#">
+              <div className="grid grid-cols-1 gap-6">
+                <div className="col-span-1">
+                  <Label
+                    htmlFor="current-password"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Current password
+                  </Label>
+                  <TextInput
+                    type="password"
+                    name="current-password"
+                    id="current-password"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <div className="col-span-1">
+                  <Label
+                    htmlFor="password"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    New password
+                  </Label>
+                  <TextInput
+                    data-popover-target="popover-password"
+                    data-popover-placement="bottom"
+                    type="password"
+                    id="password"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <div
+                    data-popover
+                    id="popover-password"
+                    role="tooltip"
+                    className="absolute z-10 invisible inline-block text-sm font-light text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-sm opacity-0 w-72 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400"
+                  >
+                    <div className="p-3 space-y-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                        Must have at least 6 characters
+                      </h3>
+                      <div className="grid grid-cols-4 gap-2">
+                        <div className="h-1 bg-orange-300 dark:bg-orange-400"></div>
+                        <div className="h-1 bg-orange-300 dark:bg-orange-400"></div>
+                        <div className="h-1 bg-gray-200 dark:bg-gray-600"></div>
+                        <div className="h-1 bg-gray-200 dark:bg-gray-600"></div>
+                      </div>
+                      <p>It’s better to have:</p>
+                      <ul>
+                        <li className="flex items-center mb-1">
+                          <svg
+                            className="w-4 h-4 mr-2 text-green-400 dark:text-green-500"
+                            aria-hidden="true"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clip-rule="evenodd"
+                            ></path>
+                          </svg>
+                          Upper & lower case letters
+                        </li>
+                        <li className="flex items-center mb-1">
+                          <svg
+                            className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
+                            aria-hidden="true"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clip-rule="evenodd"
+                            ></path>
+                          </svg>
+                          A symbol (#$&)
+                        </li>
+                        <li className="flex items-center">
+                          <svg
+                            className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
+                            aria-hidden="true"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clip-rule="evenodd"
+                            ></path>
+                          </svg>
+                          A longer password (min. 12 chars.)
+                        </li>
+                      </ul>
                     </div>
-                    <p>It’s better to have:</p>
-                    <ul>
-                      <li className="flex items-center mb-1">
-                        <svg
-                          className="w-4 h-4 mr-2 text-green-400 dark:text-green-500"
-                          aria-hidden="true"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                        Upper & lower case letters
-                      </li>
-                      <li className="flex items-center mb-1">
-                        <svg
-                          className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
-                          aria-hidden="true"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                        A symbol (#$&)
-                      </li>
-                      <li className="flex items-center">
-                        <svg
-                          className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
-                          aria-hidden="true"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                        A longer password (min. 12 chars.)
-                      </li>
-                    </ul>
+                    <div data-popper-arrow></div>
                   </div>
-                  <div data-popper-arrow></div>
+                </div>
+                <div className="col-span-1">
+                  <Label
+                    htmlFor="confirm-password"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Confirm password
+                  </Label>
+                  <TextInput
+                    type="password"
+                    name="confirm-password"
+                    id="confirm-password"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <div className="col-span-1">
+                  <button
+                    className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                    type="submit"
+                  >
+                    Save all
+                  </button>
                 </div>
               </div>
-              <div className="col-span-6 sm:col-span-3">
-                <Label
-                  htmlFor="confirm-password"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Confirm password
-                </Label>
-                <TextInput
-                  type="text"
-                  name="confirm-password"
-                  id="confirm-password"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <div className="col-span-6 sm:col-full">
-                <button
-                  className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-                  type="submit"
-                >
-                  Save all
-                </button>
-              </div>
-            </div>
-          </form>
+            </form>
+          )}
         </div>
       </div>
       <div className="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800">
@@ -326,7 +337,7 @@ export default function Settings() {
               I agree with the{" "}
               <a
                 href="#"
-                className="text-blue-600 hover:underline dark:text-blue-500"
+                className="text-primary-600 hover:underline dark:text-primary-500"
               >
                 terms and conditions
               </a>
@@ -335,7 +346,7 @@ export default function Settings() {
           </div>
           <button
             type="submit"
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
           >
             Submit
           </button>
