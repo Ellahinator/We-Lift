@@ -3,6 +3,7 @@ import { Tabs } from "flowbite-react";
 import { HiAdjustments, HiClipboardList, HiUserCircle } from "react-icons/hi";
 import { MdDashboard } from "react-icons/md";
 import Dashboard from "../components/Dashboard";
+import Settings from "../components/Settings";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Spinner } from "flowbite-react";
@@ -35,7 +36,9 @@ export default function LoginPage() {
         <Tabs.Item icon={MdDashboard} title="Dashboard">
           <Dashboard />
         </Tabs.Item>
-        <Tabs.Item icon={HiAdjustments} title="Settings"></Tabs.Item>
+        <Tabs.Item icon={HiAdjustments} title="Settings">
+          <Settings />
+        </Tabs.Item>
         <Tabs.Item icon={HiClipboardList} title="Contacts"></Tabs.Item>
       </Tabs.Group>
     </section>

@@ -4,11 +4,43 @@ import { signIn, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useState } from "react";
 import { Spinner } from "flowbite-react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  // Add this function to handle form submission
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+
+    const response = await fetch("https://we-lift.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        login: email,
+        password: password,
+      }),
+    });
+
+    if (response.ok) {
+      console.log("Success response", response);
+      signIn("credentials", { email, password, callbackUrl: "/profile" });
+    } else {
+      // Handle error response
+      if (response.status === 401) {
+        setError("Invalid email or password. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again later.");
+      }
+      console.log("Error response", response);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -58,6 +90,8 @@ export default function LoginPage() {
                   id="email"
                   placeholder="name@company.com"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div>
@@ -73,8 +107,11 @@ export default function LoginPage() {
                   id="password"
                   placeholder="••••••••"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
+              {error && <div className="text-red-500">{error}</div>}
               <div className="flex items-center justify-between">
                 <div className="flex items-start">
                   <div className="flex items-center h-5">
@@ -102,6 +139,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                onClick={handleSubmit}
               >
                 Sign in
               </Button>

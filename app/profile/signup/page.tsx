@@ -3,17 +3,56 @@ import { Button, Label, TextInput, Checkbox } from "flowbite-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { redirect } from "next/navigation";
 
 export default function SignupForm() {
   const { data: session } = useSession();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    repeatPassword: "",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (session) {
       redirect("/profile");
     }
   }, [session]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.repeatPassword) {
+      setErrorMessage("Passwords do not match!");
+      return;
+    }
+
+    const response = await fetch("https://we-lift.onrender.com/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: null,
+        email: formData.email,
+        password_hash: formData.password,
+      }),
+    });
+    console.log(response);
+
+    if (response.ok) {
+      redirect("/profile");
+    } else {
+      const errorData = await response.json();
+      console.log("Error Data", errorData);
+      setErrorMessage(errorData.message || "Failed to register user");
+    }
+  };
 
   return (
     <section>
@@ -51,6 +90,8 @@ export default function SignupForm() {
                   id="email"
                   placeholder="name@company.com"
                   required
+                  value={formData.email}
+                  onChange={handleChange}
                 />
               </div>
               <div>
@@ -66,21 +107,25 @@ export default function SignupForm() {
                   id="password"
                   placeholder="••••••••"
                   required
+                  value={formData.password}
+                  onChange={handleChange}
                 />
               </div>
               <div>
                 <Label
-                  htmlFor="repeat-password"
+                  htmlFor="repeatPassword"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Confirm Password
                 </Label>
                 <TextInput
                   type="password"
-                  name="repeat-password"
-                  id="repeat-password"
+                  name="repeatPassword"
+                  id="repeatPassword"
                   placeholder="••••••••"
                   required
+                  value={formData.repeatPassword}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -107,6 +152,7 @@ export default function SignupForm() {
               <Button
                 type="submit"
                 className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                onClick={handleSubmit}
               >
                 Sign up
               </Button>
@@ -120,6 +166,7 @@ export default function SignupForm() {
                 </Link>
               </p>
             </form>
+            {errorMessage && <div className="text-red-500">{errorMessage}</div>}
           </div>
         </div>
       </div>
