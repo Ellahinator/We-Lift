@@ -7,7 +7,7 @@ export default function Settings() {
   const { data: session } = useSession();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 max-w-6xl justify-center">
       <div className="col-span-full xl:col-auto">
         <div className="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
           <div className="flex items-center space-x-4 p-4 2xl:flex-col">
@@ -198,8 +198,7 @@ export default function Settings() {
       <div className="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800">
         <form>
           <h3 className="mb-6 text-xl font-semibold dark:text-white">
-            {" "}
-            General Information{" "}
+            User Information
           </h3>
           <div className="grid gap-6 mb-6 md:grid-cols-2">
             <div>
@@ -230,58 +229,6 @@ export default function Settings() {
                 required
               />
             </div>
-            <div>
-              <Label
-                htmlFor="company"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Company
-              </Label>
-              <TextInput
-                type="text"
-                id="company"
-                placeholder="Flowbite"
-                required
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="phone"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Phone number
-              </Label>
-              <TextInput
-                type="tel"
-                id="phone"
-                placeholder="123-45-678"
-                pattern="[0-9]{3}-[0-9]{2}-[0-9]{3}"
-                required
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="website"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Website URL
-              </Label>
-              <TextInput
-                type="url"
-                id="website"
-                placeholder="flowbite.com"
-                required
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="visitors"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Unique visitors (per month)
-              </Label>
-              <TextInput type="number" id="visitors" placeholder="" required />
-            </div>
           </div>
           <div className="mb-6">
             <Label
@@ -299,55 +246,23 @@ export default function Settings() {
           </div>
           <div className="mb-6">
             <Label
-              htmlFor="password"
+              htmlFor="username"
               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             >
-              Password
+              Username
             </Label>
             <TextInput
-              type="password"
-              id="password"
-              placeholder="•••••••••"
+              type="username"
+              id="username"
+              placeholder="JohnDoe69"
               required
             />
-          </div>
-          <div className="mb-6">
-            <Label
-              htmlFor="confirm_password"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Confirm password
-            </Label>
-            <TextInput
-              type="password"
-              id="confirm_password"
-              placeholder="•••••••••"
-              required
-            />
-          </div>
-          <div className="flex items-start mb-6">
-            <div className="flex items-center h-5">
-              <TextInput id="remember" type="checkbox" value="" required />
-            </div>
-            <Label
-              htmlFor="remember"
-              className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-            >
-              I agree with the{" "}
-              <Link
-                href="#"
-                className="text-primary-600 hover:underline dark:text-primary-500"
-              >
-                terms and conditions
-              </Link>
-              .
-            </Label>
           </div>
           <button
             type="submit"
             className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
           >
-            Submit
+            Update
           </button>
         </form>
       </div>

@@ -31,14 +31,16 @@ export default function LoginPage() {
         style="default"
         className="flex justify-center text-gray-600 dark:text-gray-200 "
       >
-        <Tabs.Item active icon={HiUserCircle} title="Profile">
+        <Tabs.Item icon={HiUserCircle} title="Profile">
           {/* <p>{session?.user?.name} </p> */}
         </Tabs.Item>
-        <Tabs.Item icon={MdDashboard} title="Dashboard">
+        <Tabs.Item active icon={MdDashboard} title="Dashboard">
           <Dashboard />
         </Tabs.Item>
         <Tabs.Item icon={HiAdjustments} title="Settings">
-          <Settings />
+          <div className="flex justify-center">
+            <Settings />
+          </div>
         </Tabs.Item>
         <Tabs.Item icon={FaUserFriends} title="Friends"></Tabs.Item>
       </Tabs.Group>

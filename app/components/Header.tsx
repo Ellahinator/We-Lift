@@ -25,7 +25,7 @@ export default function Header() {
             label={
               <Avatar
                 alt="User settings"
-                img={session.user?.image || "/logo.png"}
+                img={session.user?.image || "/avatar.svg"}
                 rounded
               />
             }
@@ -37,7 +37,7 @@ export default function Header() {
               </span>
             </Dropdown.Header>
             <Dropdown.Item>
-              <Link href="/dashboard"> Dashboard</Link>
+              <Link href="/profile"> Profile</Link>
             </Dropdown.Item>
             <Dropdown.Item>Settings</Dropdown.Item>
             <Dropdown.Divider />
