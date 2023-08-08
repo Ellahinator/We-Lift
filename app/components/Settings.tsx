@@ -5,43 +5,46 @@ import Link from "next/link";
 
 export default function Settings() {
   const { data: session } = useSession();
+  let firstName = "";
+  let lastName = "";
+  if (session?.user.name) {
+    [firstName, lastName] = session.user.name.split(" ");
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 max-w-6xl justify-center">
       <div className="col-span-full xl:col-auto">
-        <div className="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
-          <div className="flex items-center space-x-4 p-4 2xl:flex-col">
-            <Avatar
-              //   src="/images/users/bonnie-green-2x.png"
-              alt="User picture"
-              rounded={true}
-            />
-
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+          <div className="flex space-x-4 p-4">
+            <div className="2xl:flex-shrink-0">
+              <Avatar
+                img={session?.user?.image || ""}
+                alt="User picture"
+                rounded={true}
+              />
+            </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xl font-semibold dark:text-white">
                 Profile picture
               </h3>
-
-              <p className="text-gray-500 dark:text-gray-400">
-                JPG, GIF or PNG. Max size of 800K
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                JPG, GIF or PNG.
               </p>
-
-              <div className="flex items-center space-x-4">
-                <Button color="primary">
-                  <svg
-                    className="w-4 h-4 mr-2 -ml-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z"></path>
-                    <path d="M9 13h2v5a1 1 0 11-2 0v-5z"></path>
-                  </svg>
-                  Upload picture
-                </Button>
-
-                <Button color="alternative">Delete</Button>
-              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button color="primary">
+                <svg
+                  className="w-4 h-4 mr-2 -ml-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z"></path>
+                  <path d="M9 13h2v5a1 1 0 11-2 0v-5z"></path>
+                </svg>
+                Upload picture
+              </Button>
+              <Button color="alternative">Delete</Button>
             </div>
           </div>
         </div>
@@ -211,8 +214,9 @@ export default function Settings() {
               <TextInput
                 type="text"
                 id="first_name"
-                placeholder="John"
+                placeholder={firstName || "John"}
                 required
+                disabled={session?.user?.provider === "google"}
               />
             </div>
             <div>
@@ -225,8 +229,9 @@ export default function Settings() {
               <TextInput
                 type="text"
                 id="last_name"
-                placeholder="Doe"
+                placeholder={lastName || "Doe"}
                 required
+                disabled={session?.user?.provider === "google"}
               />
             </div>
           </div>
@@ -240,8 +245,9 @@ export default function Settings() {
             <TextInput
               type="email"
               id="email"
-              placeholder="john.doe@company.com"
+              placeholder={session?.user?.email || "john.doe@company.com"}
               required
+              disabled={session?.user?.provider === "google"}
             />
           </div>
           <div className="mb-6">
@@ -258,12 +264,12 @@ export default function Settings() {
               required
             />
           </div>
-          <button
+          <Button
             type="submit"
-            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg px-2 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
           >
             Update
-          </button>
+          </Button>
         </form>
       </div>
     </div>

@@ -7,6 +7,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       provider: string | undefined | null;
+      jwt: string | undefined | null;
     } & DefaultSession["user"];
   }
 

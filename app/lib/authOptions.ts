@@ -87,6 +87,7 @@ export const authOptions: NextAuthOptions = {
         console.log("Session Token", token);
         session.user.email = token.email;
         session.user.provider = token.provider as string;
+        session.user.jwt = token.jwt as string;
         console.log("Session", session);
       }
       return session;

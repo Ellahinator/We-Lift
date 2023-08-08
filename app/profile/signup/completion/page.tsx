@@ -1,27 +1,64 @@
 "use client";
 import { Label, TextInput } from "flowbite-react";
-import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRef, useState } from "react";
 
 export default function ProfileCompletion() {
-  const [name, setName] = useState("");
+  const { data: session } = useSession();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
+
+  const updateUserProfile = async (fullName: string, username: string) => {
+    try {
+      const response = await fetch(
+        "https://we-lift.onrender.com/profile/update",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user.jwt}`,
+          },
+          body: JSON.stringify({ fullName, username }),
+        }
+      );
+
+      if (!response.ok) {
+        // Handle error
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error(error);
+      return { error: error.message };
+    }
+  };
 
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
-    // Collect the user details and call backend API to update the user profile
+    const fullName = `${firstName} ${lastName}`;
 
-    // Redirect to dashboard or welcome page if successful
-    window.location.href = "/profile";
+    const res = await updateUserProfile(fullName, username);
+
+    if (res) {
+      console.log("Success");
+      // Redirect to dashboard or welcome page if successful
+      window.location.href = "/profile";
+    } else {
+      console.log("Error");
+    }
   };
 
   return (
     <div className="flex justify-center">
-      <div className="p-4 m-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800 w-3/5">
+      <div className="m-8 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800 w-1/2 max-w-2xl">
         <form onSubmit={handleSubmit}>
           <h3 className="mb-6 text-xl font-semibold dark:text-white">
-            {" "}
-            General Information{" "}
+            User Information
           </h3>
           <div className="grid gap-6 mb-6 md:grid-cols-2">
             <div>
@@ -35,6 +72,8 @@ export default function ProfileCompletion() {
                 type="text"
                 id="first_name"
                 placeholder="John"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 required
               />
             </div>
@@ -49,6 +88,8 @@ export default function ProfileCompletion() {
                 type="text"
                 id="last_name"
                 placeholder="Doe"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 required
               />
             </div>
@@ -59,7 +100,13 @@ export default function ProfileCompletion() {
               >
                 Username
               </Label>
-              <TextInput type="text" id="username" placeholder="" required />
+              <TextInput
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
             </div>
             <div>
               <Label
@@ -71,7 +118,7 @@ export default function ProfileCompletion() {
               <TextInput
                 type="email"
                 id="visitors"
-                placeholder="name@company.com"
+                placeholder={session?.user.email || ""}
                 disabled
               />
             </div>
