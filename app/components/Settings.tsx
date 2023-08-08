@@ -89,7 +89,7 @@ export default function Settings() {
     }
     try {
       const response = await fetch(
-        "https://we-lift.onrender.com/profile/update",
+        "https://we-lift.onrender.com/profile/update/password",
         {
           method: "PUT",
           headers: {
@@ -97,17 +97,20 @@ export default function Settings() {
             Authorization: `Bearer ${session?.user.jwt}`,
           },
           body: JSON.stringify({
-            password_hash: newPassword,
+            oldPassword: currentPassword,
+            newPassword: newPassword,
           }),
         }
       );
 
       if (!response.ok) {
+        setLoadingp(false);
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update password");
       }
       console.log("Password updated successfully!");
     } catch (error: any) {
+      setLoadingp(false);
       console.error(error);
     } finally {
       setLoadingp(false);

@@ -13,12 +13,8 @@ declare module "next-auth" {
   }
 
   interface User {
-    Auth: {
-      jwt: string | undefined | null;
-      username: string | undefined | null;
-      email: string | undefined | null;
-      name: string | undefined | null;
-      profile_pic: string | undefined | null;
-    };
+    jwt: string | undefined | null;
+    username: string | undefined | null;
+    profile_pic: string | undefined | null;
   }
 }

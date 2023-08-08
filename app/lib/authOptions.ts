@@ -74,19 +74,21 @@ export const authOptions: NextAuthOptions = {
 
       if (account?.provider === "credentials") {
         console.log("Credentials Account", account);
-        if (user?.Auth) {
+        if (user) {
           console.log("Credentials User", user);
-          token.jwt = user.Auth.jwt;
-          token.username = user.Auth.username;
-          token.email = user.Auth.email;
+          token.jwt = user.jwt;
+          token.username = user.username;
+          token.email = user.email;
           token.provider = account.provider;
-          token.name = user.Auth.name;
-          token.image = user.Auth.profile_pic;
+          token.name = user.name;
+          token.image = user.profile_pic;
           console.log("Token", token);
         }
       }
       if (trigger === "update" && session?.name) {
-        token.name = session.name; // Make sure this updates the token correctly
+        token.name = session.name;
+        token.username = session.username;
+        token.email = session.email;
       }
       return token;
     },
