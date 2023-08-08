@@ -1,8 +1,10 @@
+use crate::jwt::create_jwt;
+use crate::schema::users;
+use crate::{models::*, LogsDbConn};
+use diesel::prelude::*;
+
 use reqwest::header::AUTHORIZATION;
 use rocket::serde::json::Json;
-
-use crate::jwt::create_jwt;
-use crate::{models::*, LogsDbConn};
 
 #[post("/register", data = "<new_user>")]
 pub async fn register(
@@ -31,7 +33,7 @@ pub async fn login(
     login_user: Json<LoginUser>,
 ) -> Result<Json<ResponseBody>, NetworkResponse> {
     let result =
-        User::find_by_login(login_user.login.clone(), login_user.password.clone(), &conn).await;
+        User::find_by_user(login_user.user.clone(), login_user.password.clone(), &conn).await;
 
     match result {
         Ok(user) => match create_jwt(user.id) {
@@ -67,11 +69,11 @@ pub async fn google_callback(
             if response.status().is_success() {
                 let google_user: GoogleUserInfo = response.json().await.unwrap();
 
-                let email = google_user.email.clone();
+                let google_email = google_user.email.clone();
 
                 // The user's email is used as the unique identifier for the user.
                 // Check if the user already exists in the database.
-                let mut user = User::find_by_email(email, &conn).await.unwrap();
+                let mut user = User::find_by_email(google_email, &conn).await.unwrap();
 
                 // If the user does not exist, create a new user in the database.
                 if user.is_none() {
@@ -103,5 +105,44 @@ pub async fn google_callback(
         Err(_) => Err(NetworkResponse::InternalServerError(
             "Failed to verify access token".to_string(),
         )),
+    }
+}
+
+#[put("/profile/update", data = "<update_user_dto>")]
+pub async fn update_profile(
+    conn: LogsDbConn,
+    key: Result<Jwt, NetworkResponse>,
+    update_user_dto: Json<UpdateUserDTO>,
+) -> Result<NetworkResponse, NetworkResponse> {
+    let user_id = key?.claims.subject_id;
+
+    let mut changes = UserChanges {
+        username: update_user_dto.username.clone(),
+        email: update_user_dto.email.clone(),
+        name: update_user_dto.name.clone(),
+        password_hash: None,
+        profile_picture: update_user_dto.profile_picture.clone(),
+    };
+
+    if let Some(password_hash) = &update_user_dto.password_hash {
+        match User::hash_password(password_hash) {
+            Ok(hashed) => changes.password_hash = Some(hashed),
+            Err(err) => return Err(NetworkResponse::InternalServerError(err.to_string())),
+        };
+    }
+
+    match conn
+        .run(move |c| {
+            diesel::update(users::table.find(user_id))
+                .set(&changes)
+                .execute(c)
+        })
+        .await
+    {
+        Ok(_) => Ok(NetworkResponse::Ok("Profile updated".to_string())),
+        Err(err) => Err(NetworkResponse::InternalServerError(format!(
+            "Failed to update user: {}",
+            err
+        ))),
     }
 }

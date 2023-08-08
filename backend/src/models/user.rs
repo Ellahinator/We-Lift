@@ -1,6 +1,10 @@
 use crate::jwt::decode_jwt;
 use crate::schema::users;
 use crate::LogsDbConn;
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use jsonwebtoken::errors::Error;
@@ -8,10 +12,6 @@ use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::Responder;
-use scrypt::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Scrypt,
-};
 
 #[derive(Queryable)]
 pub struct User {
@@ -20,10 +20,12 @@ pub struct User {
     pub email: String,
     pub password_hash: String,
     pub created_at: NaiveDateTime,
+    pub profile_picture: Option<String>,
+    pub name: Option<String>,
 }
 
 #[derive(Insertable, Deserialize)]
-#[table_name = "users"]
+#[diesel(table_name = users)]
 pub struct NewUser {
     pub username: Option<String>,
     pub email: String,
@@ -32,19 +34,37 @@ pub struct NewUser {
 
 #[derive(Deserialize)]
 pub struct LoginUser {
-    pub login: String,
+    pub user: String,
     pub password: String,
 }
 
+#[derive(Deserialize)]
+pub struct UpdateUserDTO {
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub name: Option<String>,
+    pub password_hash: Option<String>,
+    pub profile_picture: Option<String>,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = users)]
+pub struct UserChanges {
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub name: Option<String>,
+    pub password_hash: Option<String>,
+    pub profile_picture: Option<String>,
+}
+
 impl User {
-    pub async fn create(
-        new_user: NewUser,
-        conn: &LogsDbConn,
-    ) -> Result<User, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn create(new_user: NewUser, conn: &LogsDbConn) -> Result<User, UserError> {
         let salt = SaltString::generate(&mut OsRng);
-        let password_hash = match Scrypt.hash_password(new_user.password_hash.as_bytes(), &salt) {
+        let argon2 = Argon2::default();
+
+        let password_hash = match argon2.hash_password(new_user.password_hash.as_bytes(), &salt) {
             Ok(hash) => hash.to_string(),
-            Err(e) => return Err(Box::new(e)),
+            Err(e) => return Err(UserError::HashingError(e.to_string())),
         };
 
         let user = NewUser {
@@ -64,14 +84,14 @@ impl User {
                 .first::<User>(c)
         })
         .await
-        .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        .map_err(UserError::DatabaseError)
     }
 
-    pub async fn find_by_login(
+    pub async fn find_by_user(
         login: String,
         password: String,
         conn: &LogsDbConn,
-    ) -> Result<User, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<User, UserError> {
         let result = conn
             .run(move |c| {
                 users::table
@@ -84,26 +104,26 @@ impl User {
             Ok(user) => {
                 let parsed_hash = match PasswordHash::new(&user.password_hash) {
                     Ok(parsed_hash) => parsed_hash,
-                    Err(e) => return Err(Box::new(e)),
+                    Err(e) => return Err(UserError::HashingError(e.to_string())),
                 };
 
-                if Scrypt
+                if Argon2::default()
                     .verify_password(password.as_bytes(), &parsed_hash)
                     .is_ok()
                 {
                     Ok(user)
                 } else {
-                    Err(Box::new(diesel::result::Error::NotFound))
+                    Err(UserError::NotFound)
                 }
             }
-            Err(e) => Err(Box::new(e)),
+            Err(e) => Err(UserError::DatabaseError(e)),
         }
     }
 
     pub async fn find_by_email(
         email: String,
         conn: &LogsDbConn,
-    ) -> Result<Option<User>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<Option<User>, UserError> {
         let result = conn
             .run(move |c| {
                 users::table
@@ -115,8 +135,19 @@ impl User {
 
         match result {
             Ok(user_opt) => Ok(user_opt),
-            Err(e) => Err(Box::new(e)),
+            Err(e) => Err(UserError::from(e)),
         }
+    }
+
+    pub fn hash_password(password: &str) -> Result<String, UserError> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+
+        let password_hash = match argon2.hash_password(password.as_bytes(), &salt) {
+            Ok(hash) => hash.to_string(),
+            Err(e) => return Err(UserError::HashingError(e.to_string())),
+        };
+        Ok(password_hash)
     }
 }
 
@@ -247,3 +278,30 @@ pub struct GoogleUserInfo {
 pub struct AccessToken {
     pub token: String,
 }
+
+#[derive(Debug)]
+pub enum UserError {
+    EmailAlreadyInUse,
+    NotFound,
+    HashingError(String),
+    DatabaseError(diesel::result::Error),
+}
+
+impl From<diesel::result::Error> for UserError {
+    fn from(err: diesel::result::Error) -> Self {
+        UserError::DatabaseError(err)
+    }
+}
+
+impl std::fmt::Display for UserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            UserError::EmailAlreadyInUse => write!(f, "Email is already in use"),
+            UserError::NotFound => write!(f, "User not found"),
+            UserError::HashingError(err) => write!(f, "Hashing error: {}", err),
+            UserError::DatabaseError(err) => write!(f, "Database error: {}", err),
+        }
+    }
+}
+
+impl std::error::Error for UserError {}

@@ -62,7 +62,8 @@ async fn rocket() -> Rocket<Build> {
                 index,
                 user_controller::login,
                 user_controller::register,
-                user_controller::google_callback
+                user_controller::google_callback,
+                user_controller::update_profile,
             ],
         )
         .attach(cors)
