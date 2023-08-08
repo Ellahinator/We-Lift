@@ -97,8 +97,8 @@ export default function Settings() {
             Authorization: `Bearer ${session?.user.jwt}`,
           },
           body: JSON.stringify({
-            oldPassword: currentPassword,
-            newPassword: newPassword,
+            old_password: currentPassword,
+            new_password: newPassword,
           }),
         }
       );
