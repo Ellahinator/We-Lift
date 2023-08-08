@@ -32,7 +32,7 @@ export default function LoginPage() {
         className="flex justify-center text-gray-600 dark:text-gray-200 "
       >
         <Tabs.Item icon={HiUserCircle} title="Profile">
-          {/* <p>{session?.user?.name} </p> */}
+          <p>{session?.user?.name} </p>
         </Tabs.Item>
         <Tabs.Item active icon={MdDashboard} title="Dashboard">
           <Dashboard />

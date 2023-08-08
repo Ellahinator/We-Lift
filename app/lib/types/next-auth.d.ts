@@ -8,10 +8,17 @@ declare module "next-auth" {
     user: {
       provider: string | undefined | null;
       jwt: string | undefined | null;
+      username: string | undefined | null;
     } & DefaultSession["user"];
   }
 
   interface User {
-    AuthToken: string;
+    Auth: {
+      jwt: string | undefined | null;
+      username: string | undefined | null;
+      email: string | undefined | null;
+      name: string | undefined | null;
+      profile_pic: string | undefined | null;
+    };
   }
 }

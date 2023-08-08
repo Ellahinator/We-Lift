@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRef, useState } from "react";
 
 export default function ProfileCompletion() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -19,7 +19,7 @@ export default function ProfileCompletion() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session?.user.jwt}`,
           },
-          body: JSON.stringify({ fullName, username }),
+          body: JSON.stringify({ name: fullName, username: username }),
         }
       );
 
@@ -47,6 +47,8 @@ export default function ProfileCompletion() {
     if (res) {
       console.log("Success");
       // Redirect to dashboard or welcome page if successful
+      // Update the session on the client side with the new name and username
+      await update({ name: fullName, username: username });
       window.location.href = "/profile";
     } else {
       console.log("Error");

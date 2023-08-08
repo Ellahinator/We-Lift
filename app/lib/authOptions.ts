@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         console.log("Credentials", credentials);
         const credentialDetails = {
-          login: credentials!.email,
+          user: credentials!.email,
           password: credentials!.password,
         };
         const resp = await fetch("https://we-lift.onrender.com/login", {
@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, user }) {
+    async jwt({ session, trigger, token, account, user }) {
       // If an access token is present, fetch a custom token from the backend
       if (account?.access_token) {
         console.log("Google Account", account);
@@ -74,11 +74,19 @@ export const authOptions: NextAuthOptions = {
 
       if (account?.provider === "credentials") {
         console.log("Credentials Account", account);
-        if (user) {
+        if (user?.Auth) {
           console.log("Credentials User", user);
-          token.jwt = user.AuthToken;
+          token.jwt = user.Auth.jwt;
+          token.username = user.Auth.username;
+          token.email = user.Auth.email;
+          token.provider = account.provider;
+          token.name = user.Auth.name;
+          token.image = user.Auth.profile_pic;
           console.log("Token", token);
         }
+      }
+      if (trigger === "update" && session?.name) {
+        token.name = session.name; // Make sure this updates the token correctly
       }
       return token;
     },
@@ -88,6 +96,8 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email;
         session.user.provider = token.provider as string;
         session.user.jwt = token.jwt as string;
+        session.user.name = token.name as string;
+        session.user.username = token.username as string;
         console.log("Session", session);
       }
       return session;

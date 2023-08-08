@@ -23,14 +23,20 @@ export default function LoginPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        login: email,
+        user: email,
         password: password,
       }),
     });
 
     if (response.ok) {
       console.log("Success response", response);
-      signIn("credentials", { email, password, callbackUrl: "/profile" });
+      const data = await response.json();
+      signIn("credentials", {
+        email,
+        password,
+        callbackUrl: "/profile",
+      });
+      return data;
     } else {
       // Handle error response
       if (response.status === 401) {

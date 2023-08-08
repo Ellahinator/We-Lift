@@ -1,15 +1,118 @@
 "use client";
-import { Avatar, Button, TextInput, Label } from "flowbite-react";
+import { Avatar, Button, TextInput, Label, Spinner } from "flowbite-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Settings() {
-  const { data: session } = useSession();
-  let firstName = "";
-  let lastName = "";
+  const { data: session, update } = useSession();
+
+  let initialFirstName = "";
+  let initialLastName = "";
   if (session?.user.name) {
-    [firstName, lastName] = session.user.name.split(" ");
+    [initialFirstName, initialLastName] = session.user.name.split(" ");
   }
+  let initialEmail = "";
+  if (session?.user.email) {
+    initialEmail = session.user.email;
+  }
+  let initialUsername = "";
+  if (session?.user.username) {
+    initialUsername = session.user.username;
+  }
+
+  const [firstName, setFirstName] = useState(initialFirstName);
+  const [lastName, setLastName] = useState(initialLastName);
+  const [email, setEmail] = useState(session?.user?.email || "");
+  const [username, setUsername] = useState(session?.user.username || "");
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loadingp, setLoadingp] = useState(false);
+  const [loadingu, setLoadingu] = useState(false);
+
+  const updateUserInformation = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    setLoadingu(true);
+    if (firstName === "") {
+      setFirstName(initialFirstName);
+    }
+    if (lastName === "") {
+      setLastName(initialLastName);
+    }
+    if (email === "") {
+      setEmail(initialEmail);
+    }
+    if (username === "") {
+      setUsername(initialUsername);
+    }
+
+    const fullName = `${firstName} ${lastName}`;
+    try {
+      const response = await fetch(
+        "https://we-lift.onrender.com/profile/update",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user.jwt}`,
+          },
+          body: JSON.stringify({
+            name: fullName,
+            username: username,
+            email: email,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update password");
+      }
+      await update({ name: fullName, username: username, email: email });
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setLoadingu(false);
+    }
+    console.log("User information updated!");
+  };
+
+  const updatePassword = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    setLoadingp(true);
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    try {
+      const response = await fetch(
+        "https://we-lift.onrender.com/profile/update",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user.jwt}`,
+          },
+          body: JSON.stringify({
+            password_hash: newPassword,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update password");
+      }
+      console.log("Password updated successfully!");
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setLoadingp(false);
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 max-w-6xl justify-center">
@@ -18,7 +121,7 @@ export default function Settings() {
           <div className="flex space-x-4 p-4">
             <div className="2xl:flex-shrink-0">
               <Avatar
-                img={session?.user?.image || ""}
+                img={session?.user?.image || "/avatar.svg"}
                 alt="User picture"
                 rounded={true}
               />
@@ -67,7 +170,7 @@ export default function Settings() {
               </p>
             </div>
           ) : (
-            <form action="#">
+            <form onSubmit={updatePassword}>
               <div className="grid grid-cols-1 gap-6">
                 <div className="col-span-1">
                   <Label
@@ -80,6 +183,8 @@ export default function Settings() {
                     type="password"
                     name="current-password"
                     id="current-password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                   />
@@ -96,6 +201,9 @@ export default function Settings() {
                     data-popover-placement="bottom"
                     type="password"
                     id="password"
+                    name="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                   />
@@ -181,17 +289,27 @@ export default function Settings() {
                     type="password"
                     name="confirm-password"
                     id="confirm-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                   />
                 </div>
                 <div className="col-span-1">
-                  <button
-                    className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  <Button
+                    className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg px-2 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                     type="submit"
+                    disabled={loadingp}
                   >
-                    Save all
-                  </button>
+                    {loadingp ? (
+                      <div className="flex items-center space-x-2">
+                        <Spinner color="gray" size="sm" />
+                        <span className="pl-3">Updating...</span>
+                      </div>
+                    ) : (
+                      "Update password"
+                    )}
+                  </Button>
                 </div>
               </div>
             </form>
@@ -199,7 +317,7 @@ export default function Settings() {
         </div>
       </div>
       <div className="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800">
-        <form>
+        <form onSubmit={updateUserInformation}>
           <h3 className="mb-6 text-xl font-semibold dark:text-white">
             User Information
           </h3>
@@ -214,8 +332,8 @@ export default function Settings() {
               <TextInput
                 type="text"
                 id="first_name"
-                placeholder={firstName || "John"}
-                required
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder={initialFirstName || "John"}
                 disabled={session?.user?.provider === "google"}
               />
             </div>
@@ -229,8 +347,8 @@ export default function Settings() {
               <TextInput
                 type="text"
                 id="last_name"
-                placeholder={lastName || "Doe"}
-                required
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder={initialLastName || "Doe"}
                 disabled={session?.user?.provider === "google"}
               />
             </div>
@@ -245,8 +363,8 @@ export default function Settings() {
             <TextInput
               type="email"
               id="email"
-              placeholder={session?.user?.email || "john.doe@company.com"}
-              required
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={initialEmail || "john.doe@company.com"}
               disabled={session?.user?.provider === "google"}
             />
           </div>
@@ -260,15 +378,23 @@ export default function Settings() {
             <TextInput
               type="username"
               id="username"
-              placeholder="JohnDoe69"
-              required
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={initialUsername || "JohnDoe69"}
             />
           </div>
           <Button
             type="submit"
             className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg px-2 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+            disabled={loadingu}
           >
-            Update
+            {loadingu ? (
+              <div className="flex items-center space-x-2">
+                <Spinner color="gray" size="sm" />
+                <span className="pl-3">Updating...</span>
+              </div>
+            ) : (
+              "Update"
+            )}
           </Button>
         </form>
       </div>
