@@ -7,6 +7,35 @@ use reqwest::header::AUTHORIZATION;
 use rocket::serde::json::Json;
 use validator::Validate;
 
+#[get("/profile")]
+pub async fn get_profile(
+    conn: LogsDbConn,
+    key: Result<Jwt, NetworkResponse>,
+) -> Result<Json<UserDetails>, NetworkResponse> {
+    let user_id = key?.claims.subject_id;
+
+    let user_result = conn
+        .run(move |c| users::table.find(user_id).first::<User>(c))
+        .await;
+
+    match user_result {
+        Ok(user) => {
+            let profile = UserDetails {
+                username: user.username,
+                email: Some(user.email),
+                profile_picture: user.profile_picture,
+                name: user.name,
+                created_at: user.created_at,
+            };
+            Ok(Json(profile))
+        }
+        Err(err) => Err(NetworkResponse::InternalServerError(format!(
+            "Failed to find user: {}",
+            err
+        ))),
+    }
+}
+
 #[post("/register", data = "<new_user>")]
 pub async fn register(
     conn: LogsDbConn,
@@ -179,6 +208,7 @@ pub async fn update_profile(
                         email: Some(updated_user.email),
                         name: updated_user.name,
                         profile_picture: updated_user.profile_picture,
+                        created_at: updated_user.created_at,
                     };
                     Ok(Json(user_details))
                 }
@@ -241,6 +271,7 @@ pub async fn update_password(
         email: Some(current_user.email),
         name: current_user.name,
         profile_picture: current_user.profile_picture,
+        created_at: current_user.created_at,
     };
 
     Ok(Json(updated_user_details))

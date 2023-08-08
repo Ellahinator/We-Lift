@@ -82,6 +82,7 @@ pub struct UserDetails {
     pub email: Option<String>,
     pub name: Option<String>,
     pub profile_picture: Option<String>,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Serialize, Deserialize)]

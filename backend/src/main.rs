@@ -60,6 +60,7 @@ async fn rocket() -> Rocket<Build> {
             "/",
             routes![
                 index,
+                user_controller::get_profile,
                 user_controller::login,
                 user_controller::register,
                 user_controller::google_callback,
