@@ -8,10 +8,13 @@ use argon2::{
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use jsonwebtoken::errors::Error;
+use lazy_static::lazy_static;
+use regex::Regex;
 use rocket::http::Status;
 use rocket::request::{FromRequest, Outcome, Request};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::Responder;
+use validator::{Validate, ValidationError};
 
 #[derive(Queryable)]
 pub struct User {
@@ -24,26 +27,43 @@ pub struct User {
     pub name: Option<String>,
 }
 
-#[derive(Insertable, Deserialize)]
+#[derive(Insertable, Deserialize, Validate)]
 #[diesel(table_name = users)]
 pub struct NewUser {
+    #[validate(regex(path = "USERNAME_REGEX"))]
     pub username: Option<String>,
+    #[validate(email(message = "Invalid email address"))]
     pub email: String,
+    #[validate(
+        length(min = 6, message = "Password must be at least 6 characters"),
+        custom(function = "validate_password", message = "Invalid password")
+    )]
     pub password_hash: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct LoginUser {
     pub user: String,
+    #[validate(
+        length(min = 6, message = "Password must be at least 6 characters"),
+        custom(function = "validate_password", message = "Invalid password")
+    )]
     pub password: String,
 }
 
-#[derive(Deserialize)]
-pub struct UpdateUserDTO {
+#[derive(Deserialize, Validate)]
+pub struct UserDTO {
+    #[validate(regex(path = "USERNAME_REGEX"))]
     pub username: Option<String>,
+    #[validate(email(message = "Invalid email address"))]
     pub email: Option<String>,
     pub name: Option<String>,
+    #[validate(
+        length(min = 6, message = "Password must be at least 6 characters"),
+        custom(function = "validate_password", message = "Invalid password")
+    )]
     pub password_hash: Option<String>,
+    #[validate(url(message = "Invalid URL"))]
     pub profile_picture: Option<String>,
 }
 
@@ -54,6 +74,14 @@ pub struct UserChanges {
     pub email: Option<String>,
     pub name: Option<String>,
     pub password_hash: Option<String>,
+    pub profile_picture: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct UserDetails {
+    pub username: Option<String>,
+    pub email: Option<String>,
+    pub name: Option<String>,
     pub profile_picture: Option<String>,
 }
 
@@ -87,15 +115,19 @@ impl User {
         .map_err(UserError::DatabaseError)
     }
 
-    pub async fn find_by_user(
-        login: String,
+    pub async fn login(
+        username_or_email: String,
         password: String,
         conn: &LogsDbConn,
     ) -> Result<User, UserError> {
         let result = conn
             .run(move |c| {
                 users::table
-                    .filter(users::email.eq(&login).or(users::username.eq(&login)))
+                    .filter(
+                        users::email
+                            .eq(&username_or_email)
+                            .or(users::username.eq(&username_or_email)),
+                    )
                     .first::<User>(c)
             })
             .await;
@@ -170,9 +202,20 @@ pub enum NetworkResponse {
 }
 
 #[derive(Serialize)]
+pub struct AuthResponse {
+    pub username: Option<String>,
+    pub email: String,
+    pub name: Option<String>,
+    pub profile_picture: Option<String>,
+    pub jwt: String,
+}
+
+#[derive(Serialize)]
 pub enum ResponseBody {
     Message(String),
     AuthToken(String),
+    Auth(AuthResponse),
+    User(UserDetails),
 }
 
 #[derive(Serialize)]
@@ -305,3 +348,23 @@ impl std::fmt::Display for UserError {
 }
 
 impl std::error::Error for UserError {}
+
+lazy_static! {
+    // Username can only contain alphanumeric characters
+    static ref USERNAME_REGEX: Regex = Regex::new(r"^[a-zA-Z0-9]+$").unwrap();
+}
+// Password must be at least 6 characters long and contain at least one letter and one number. Can also contain special characters
+fn validate_password(password: &str) -> Result<(), ValidationError> {
+    let has_letter = password.chars().any(|c| c.is_alphabetic());
+    let has_number = password.chars().any(|c| c.is_numeric());
+    let has_special_char = password.chars().any(|c| "!@#$%^&*".contains(c));
+
+    if has_letter
+        && has_number
+        && (has_special_char || password.chars().all(|c| c.is_alphanumeric()))
+    {
+        Ok(())
+    } else {
+        Err(ValidationError::new("Password requirements not met"))
+    }
+}

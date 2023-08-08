@@ -5,17 +5,32 @@ use diesel::prelude::*;
 
 use reqwest::header::AUTHORIZATION;
 use rocket::serde::json::Json;
+use validator::Validate;
 
 #[post("/register", data = "<new_user>")]
 pub async fn register(
     conn: LogsDbConn,
     new_user: Json<NewUser>,
 ) -> Result<Json<ResponseBody>, NetworkResponse> {
+    new_user.validate().map_err(|err| {
+        let validation_errors = err.field_errors();
+
+        NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
+    })?;
     let result = User::create(new_user.into_inner(), &conn).await;
 
     match result {
         Ok(user) => match create_jwt(user.id) {
-            Ok(token) => Ok(Json(ResponseBody::AuthToken(token))),
+            Ok(token) => {
+                let auth_response = AuthResponse {
+                    username: user.username,
+                    email: user.email,
+                    name: user.name,
+                    profile_picture: user.profile_picture,
+                    jwt: token,
+                };
+                Ok(Json(ResponseBody::Auth(auth_response)))
+            }
             Err(e) => Err(NetworkResponse::InternalServerError(format!(
                 "Failed to create JWT: {}",
                 e
@@ -32,12 +47,25 @@ pub async fn login(
     conn: LogsDbConn,
     login_user: Json<LoginUser>,
 ) -> Result<Json<ResponseBody>, NetworkResponse> {
-    let result =
-        User::find_by_user(login_user.user.clone(), login_user.password.clone(), &conn).await;
+    login_user.validate().map_err(|err| {
+        let validation_errors = err.field_errors();
+
+        NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
+    })?;
+    let result = User::login(login_user.user.clone(), login_user.password.clone(), &conn).await;
 
     match result {
         Ok(user) => match create_jwt(user.id) {
-            Ok(token) => Ok(Json(ResponseBody::AuthToken(token))),
+            Ok(token) => {
+                let auth_response = AuthResponse {
+                    username: user.username,
+                    email: user.email,
+                    name: user.name,
+                    profile_picture: user.profile_picture,
+                    jwt: token,
+                };
+                Ok(Json(ResponseBody::Auth(auth_response)))
+            }
             Err(e) => Err(NetworkResponse::InternalServerError(format!(
                 "Failed to create JWT: {}",
                 e
@@ -112,9 +140,16 @@ pub async fn google_callback(
 pub async fn update_profile(
     conn: LogsDbConn,
     key: Result<Jwt, NetworkResponse>,
-    update_user_dto: Json<UpdateUserDTO>,
-) -> Result<NetworkResponse, NetworkResponse> {
+    update_user_dto: Json<UserDTO>,
+) -> Result<Json<ResponseBody>, NetworkResponse> {
     let user_id = key?.claims.subject_id;
+
+    // Validate the update_user_dto
+    update_user_dto.validate().map_err(|err| {
+        let validation_errors = err.field_errors();
+
+        NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
+    })?;
 
     let mut changes = UserChanges {
         username: update_user_dto.username.clone(),
@@ -139,7 +174,28 @@ pub async fn update_profile(
         })
         .await
     {
-        Ok(_) => Ok(NetworkResponse::Ok("Profile updated".to_string())),
+        Ok(_) => {
+            // Fetch the updated user by ID
+            let updated_user_result = conn
+                .run(move |c| users::table.filter(users::id.eq(&user_id)).first::<User>(c))
+                .await;
+
+            match updated_user_result {
+                Ok(updated_user) => {
+                    let user_details = UserDetails {
+                        username: updated_user.username,
+                        email: Some(updated_user.email),
+                        name: updated_user.name,
+                        profile_picture: updated_user.profile_picture,
+                    };
+                    Ok(Json(ResponseBody::User(user_details)))
+                }
+                Err(err) => Err(NetworkResponse::InternalServerError(format!(
+                    "Failed to find updated user: {}",
+                    err
+                ))),
+            }
+        }
         Err(err) => Err(NetworkResponse::InternalServerError(format!(
             "Failed to update user: {}",
             err
