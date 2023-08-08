@@ -56,9 +56,9 @@ diesel::table! {
 diesel::table! {
     weight_progress (id) {
         id -> Int4,
-        user_id -> Nullable<Int4>,
-        weight -> Numeric,
-        date -> Timestamp,
+        user_id -> Int4,
+        weight -> Float8,
+        date -> Date,
     }
 }
 

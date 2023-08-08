@@ -13,7 +13,7 @@ mod models;
 mod schema;
 
 mod controllers;
-use controllers::user_controller;
+use controllers::{user_controller, weight_controller};
 
 #[get("/")]
 fn index() -> &'static str {
@@ -64,6 +64,8 @@ async fn rocket() -> Rocket<Build> {
                 user_controller::register,
                 user_controller::google_callback,
                 user_controller::update_profile,
+                weight_controller::create_weight_data,
+                weight_controller::get_weight_data,
             ],
         )
         .attach(cors)
