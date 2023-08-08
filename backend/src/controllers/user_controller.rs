@@ -46,7 +46,7 @@ pub async fn register(
 pub async fn login(
     conn: LogsDbConn,
     login_user: Json<LoginUser>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
+) -> Result<Json<AuthResponse>, NetworkResponse> {
     login_user.validate().map_err(|err| {
         let validation_errors = err.field_errors();
 
@@ -64,7 +64,7 @@ pub async fn login(
                     profile_picture: user.profile_picture,
                     jwt: token,
                 };
-                Ok(Json(ResponseBody::Auth(auth_response)))
+                Ok(Json(auth_response))
             }
             Err(e) => Err(NetworkResponse::InternalServerError(format!(
                 "Failed to create JWT: {}",
@@ -151,20 +151,12 @@ pub async fn update_profile(
         NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
     })?;
 
-    let mut changes = UserChanges {
+    let changes = UserChanges {
         username: update_user_dto.username.clone(),
         email: update_user_dto.email.clone(),
         name: update_user_dto.name.clone(),
-        password_hash: None,
         profile_picture: update_user_dto.profile_picture.clone(),
     };
-
-    if let Some(password_hash) = &update_user_dto.password_hash {
-        match User::hash_password(password_hash) {
-            Ok(hashed) => changes.password_hash = Some(hashed),
-            Err(err) => return Err(NetworkResponse::InternalServerError(err.to_string())),
-        };
-    }
 
     match conn
         .run(move |c| {
@@ -201,4 +193,55 @@ pub async fn update_profile(
             err
         ))),
     }
+}
+
+#[put("/profile/update/password", data = "<update_password>")]
+pub async fn update_password(
+    conn: LogsDbConn,
+    key: Result<Jwt, NetworkResponse>,
+    update_password: Json<UpdatePassword>,
+) -> Result<Json<UserDetails>, NetworkResponse> {
+    let user_id = key?.claims.subject_id;
+
+    let current_user = conn
+        .run(move |c| users::table.find(user_id).first::<User>(c))
+        .await
+        .map_err(|err| {
+            NetworkResponse::InternalServerError(format!("Failed to find user: {}", err))
+        })?;
+
+    // Verify old password
+    match current_user.verify_password(&update_password.old_password) {
+        Ok(true) => (),
+        Ok(false) => {
+            return Err(NetworkResponse::Unauthorized(
+                "Old password does not match".to_string(),
+            ))
+        }
+        Err(err) => return Err(NetworkResponse::InternalServerError(err.to_string())),
+    }
+    // Hash new password
+    let new_hashed_password = User::hash_password(&update_password.new_password)
+        .map_err(|err| NetworkResponse::InternalServerError(err.to_string()))?;
+
+    // Update the user's password in the database
+    conn.run(move |c| {
+        diesel::update(users::table.find(user_id))
+            .set(users::password_hash.eq(new_hashed_password))
+            .execute(c)
+    })
+    .await
+    .map_err(|err| {
+        NetworkResponse::InternalServerError(format!("Failed to update password: {}", err))
+    })?;
+
+    // Fetch the updated user's details
+    let updated_user_details = UserDetails {
+        username: current_user.username,
+        email: Some(current_user.email),
+        name: current_user.name,
+        profile_picture: current_user.profile_picture,
+    };
+
+    Ok(Json(updated_user_details))
 }

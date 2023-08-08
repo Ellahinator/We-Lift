@@ -73,7 +73,6 @@ pub struct UserChanges {
     pub username: Option<String>,
     pub email: Option<String>,
     pub name: Option<String>,
-    pub password_hash: Option<String>,
     pub profile_picture: Option<String>,
 }
 
@@ -83,6 +82,12 @@ pub struct UserDetails {
     pub email: Option<String>,
     pub name: Option<String>,
     pub profile_picture: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct UpdatePassword {
+    pub old_password: String,
+    pub new_password: String,
 }
 
 impl User {
@@ -180,6 +185,19 @@ impl User {
             Err(e) => return Err(UserError::HashingError(e.to_string())),
         };
         Ok(password_hash)
+    }
+
+    pub fn verify_password(&self, password: &str) -> Result<bool, UserError> {
+        let parsed_hash = PasswordHash::new(&self.password_hash)
+            .map_err(|e| UserError::HashingError(e.to_string()))?;
+        if Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok()
+        {
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 }
 

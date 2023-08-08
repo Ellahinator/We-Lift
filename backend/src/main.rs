@@ -64,6 +64,7 @@ async fn rocket() -> Rocket<Build> {
                 user_controller::register,
                 user_controller::google_callback,
                 user_controller::update_profile,
+                user_controller::update_password,
                 weight_controller::create_weight_data,
                 weight_controller::get_weight_data,
             ],
