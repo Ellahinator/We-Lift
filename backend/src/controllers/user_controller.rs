@@ -141,7 +141,7 @@ pub async fn update_profile(
     conn: LogsDbConn,
     key: Result<Jwt, NetworkResponse>,
     update_user_dto: Json<UserDTO>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
+) -> Result<Json<UserDetails>, NetworkResponse> {
     let user_id = key?.claims.subject_id;
 
     // Validate the update_user_dto
@@ -188,7 +188,7 @@ pub async fn update_profile(
                         name: updated_user.name,
                         profile_picture: updated_user.profile_picture,
                     };
-                    Ok(Json(ResponseBody::User(user_details)))
+                    Ok(Json(user_details))
                 }
                 Err(err) => Err(NetworkResponse::InternalServerError(format!(
                     "Failed to find updated user: {}",
