@@ -2,7 +2,6 @@
 extern crate rocket;
 
 use dotenvy::dotenv;
-use models::GoogleUserInfo;
 use rocket::http::Method;
 use rocket::{Build, Rocket};
 use rocket_cors::{AllowedHeaders, AllowedOrigins, CorsOptions};
@@ -14,9 +13,7 @@ mod models;
 mod schema;
 
 mod controllers;
-use controllers::user_controller;
-
-use rocket_oauth2::OAuth2;
+use controllers::{user_controller, weight_controller};
 
 #[get("/")]
 fn index() -> &'static str {
@@ -63,11 +60,15 @@ async fn rocket() -> Rocket<Build> {
             "/",
             routes![
                 index,
+                user_controller::get_profile,
                 user_controller::login,
                 user_controller::register,
-                user_controller::google_callback
+                user_controller::google_callback,
+                user_controller::update_profile,
+                user_controller::update_password,
+                weight_controller::create_weight_data,
+                weight_controller::get_weight_data,
             ],
         )
-        .attach(OAuth2::<GoogleUserInfo>::fairing("google"))
         .attach(cors)
 }

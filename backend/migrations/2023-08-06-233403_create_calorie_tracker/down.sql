@@ -1,0 +1,1 @@
+DROP TABLE calorie_tracker;
