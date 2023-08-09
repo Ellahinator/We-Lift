@@ -2,7 +2,7 @@
 import { Button } from "flowbite-react";
 import Image from "next/image";
 
-export default function FriendCard() {
+export default function AddFriendCard() {
   const user = {
     name: "John Doe",
     stats: {
@@ -42,14 +42,14 @@ export default function FriendCard() {
         <div className="flex mt-4 space-x-3 md:mt-6">
           <Button
             href="#"
-            gradientDuoTone="pinkToOrange"
-            className="text-sm font-medium text-white"
+            gradientDuoTone="purpleToPink"
+            className="text-sm font-medium text-center text-white"
           >
-            Remove friend
+            Add friend
           </Button>
           <Button
             href="#"
-            className="text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:focus:ring-gray-700"
+            className="text-sm font-medium text-center text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:focus:ring-gray-700"
           >
             Message
           </Button>

@@ -1,6 +1,6 @@
-import CalorieTracker from "./dashboard/CalorieTracker";
-import ExerciseProgress from "./dashboard/ExerciseProgress";
-import WeightGraph from ".//dashboard/WeightGraph";
+import CalorieTracker from "../dashboard/CalorieTracker";
+import ExerciseProgress from "../dashboard/ExerciseProgress";
+import WeightGraph from "../dashboard/WeightGraph";
 
 export default function Dashboard() {
   return (

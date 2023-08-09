@@ -15,7 +15,6 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        console.log("Credentials", credentials);
         const credentialDetails = {
           user: credentials!.email,
           password: credentials!.password,
@@ -38,7 +37,6 @@ export const authOptions: NextAuthOptions = {
     async jwt({ session, trigger, token, account, user }) {
       // If an access token is present, fetch a custom token from the backend
       if (account?.access_token) {
-        console.log("Google Account", account);
         const requestOptions = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -58,10 +56,10 @@ export const authOptions: NextAuthOptions = {
 
           // Extract and assign the custom token from the backend
           const data = await response.json();
-          if (data?.AuthToken) {
+          if (data?.jwt) {
+            token.provider = account.provider;
             token.jwt = data.jwt;
             token.username = data.username;
-            token.provider = account.provider;
           }
         } catch (error) {
           console.error("Error calling backend:", error);

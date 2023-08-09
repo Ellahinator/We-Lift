@@ -1,5 +1,5 @@
 "use client";
-import FriendCard from "../../../components/FriendCard";
+import FriendCard from "../../../components/AddFriendCard";
 import { Breadcrumb } from "flowbite-react";
 import { HiHome } from "react-icons/hi";
 

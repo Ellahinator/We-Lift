@@ -7,9 +7,10 @@ import {
 } from "react-icons/hi";
 import { MdDashboard } from "react-icons/md";
 import { FaUserFriends } from "react-icons/fa";
-import Dashboard from "../components/Dashboard";
-import Settings from "../components/Settings";
-import Profile from "../components/ProfileCard";
+import Dashboard from "../components/profile/Dashboard";
+import Settings from "../components/profile/Settings";
+import Profile from "../components/profile/ProfileCard";
+import Friends from "../components/profile/Friends";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Spinner } from "flowbite-react";
@@ -61,6 +62,9 @@ export default function LoginPage() {
               <p>Add Friend Example</p>
               <HiOutlineArrowRight className="ml-2 h-5 w-5" />
             </Button>
+          </div>
+          <div className="flex justify-center pt-4">
+            <Friends />
           </div>
         </Tabs.Item>
       </Tabs.Group>
