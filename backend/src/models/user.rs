@@ -232,9 +232,6 @@ pub struct AuthResponse {
 #[derive(Serialize)]
 pub enum ResponseBody {
     Message(String),
-    AuthToken(String),
-    Auth(AuthResponse),
-    User(UserDetails),
 }
 
 #[derive(Serialize)]

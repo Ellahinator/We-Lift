@@ -21,3 +21,4 @@ argon2 = "0.5.1"
 validator = { version = "0.15", features = ["derive"] }
 lazy_static = "1.4.0"
 regex = "1.9.3"
+rand = "0.8.5"

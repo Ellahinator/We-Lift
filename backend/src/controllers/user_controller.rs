@@ -3,6 +3,7 @@ use crate::schema::users;
 use crate::{models::*, LogsDbConn};
 use diesel::prelude::*;
 
+use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::AUTHORIZATION;
 use rocket::serde::json::Json;
 use validator::Validate;
@@ -40,7 +41,7 @@ pub async fn get_profile(
 pub async fn register(
     conn: LogsDbConn,
     new_user: Json<NewUser>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
+) -> Result<Json<AuthResponse>, NetworkResponse> {
     new_user.validate().map_err(|err| {
         let validation_errors = err.field_errors();
 
@@ -58,7 +59,7 @@ pub async fn register(
                     profile_picture: user.profile_picture,
                     jwt: token,
                 };
-                Ok(Json(ResponseBody::Auth(auth_response)))
+                Ok(Json(auth_response))
             }
             Err(e) => Err(NetworkResponse::InternalServerError(format!(
                 "Failed to create JWT: {}",
@@ -110,7 +111,7 @@ pub async fn login(
 pub async fn google_callback(
     access_token: Json<AccessToken>,
     conn: LogsDbConn,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
+) -> Result<Json<AuthResponse>, NetworkResponse> {
     // Build the request client.
     let client = reqwest::Client::builder().build().unwrap();
 
@@ -134,20 +135,35 @@ pub async fn google_callback(
 
                 // If the user does not exist, create a new user in the database.
                 if user.is_none() {
+                    let random_password: String = rand::thread_rng()
+                        .sample_iter(&Alphanumeric)
+                        .take(16)
+                        .map(char::from)
+                        .collect();
                     let new_user = NewUser {
                         username: None,
                         email: google_user.email,
-                        password_hash: "NotNeeded".to_string(), // Password isn't needed for OAuth, it gets hashed with salt anyway
+                        password_hash: random_password,
                     };
                     user = Some(User::create(new_user, &conn).await.unwrap());
                 }
 
+                let user = user.unwrap();
                 // Generate a JWT
-                let jwt_result = create_jwt(user.unwrap().id);
+                let jwt_result = create_jwt(user.id);
 
                 // Handle possible JWT creation error
                 match jwt_result {
-                    Ok(token) => Ok(Json(ResponseBody::AuthToken(token))),
+                    Ok(token) => {
+                        let auth_response = AuthResponse {
+                            username: user.username,
+                            email: user.email,
+                            name: user.name,
+                            profile_picture: user.profile_picture,
+                            jwt: token,
+                        };
+                        Ok(Json(auth_response))
+                    }
                     Err(e) => Err(NetworkResponse::InternalServerError(format!(
                         "Failed to create JWT: {}",
                         e
