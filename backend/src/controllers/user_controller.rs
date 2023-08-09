@@ -1,40 +1,70 @@
-use anyhow::{Context, Error};
-use reqwest::header::AUTHORIZATION;
-use rocket::get;
-use rocket::http::{Cookie, CookieJar, SameSite};
-use rocket::response::{Debug, Redirect};
-use rocket::serde::json::Json;
-use rocket_oauth2::{OAuth2, TokenResponse};
-use serde_json::{self};
-
 use crate::jwt::create_jwt;
+use crate::schema::users;
 use crate::{models::*, LogsDbConn};
+use diesel::prelude::*;
+
+use rand::{distributions::Alphanumeric, Rng};
+use reqwest::header::AUTHORIZATION;
+use rocket::serde::json::Json;
+use validator::Validate;
+
+#[get("/profile")]
+pub async fn get_profile(
+    conn: LogsDbConn,
+    key: Result<Jwt, NetworkResponse>,
+) -> Result<Json<UserDetails>, NetworkResponse> {
+    let user_id = key?.claims.subject_id;
+
+    let user_result = conn
+        .run(move |c| users::table.find(user_id).first::<User>(c))
+        .await;
+
+    match user_result {
+        Ok(user) => {
+            let profile = UserDetails {
+                username: user.username,
+                email: Some(user.email),
+                profile_picture: user.profile_picture,
+                name: user.name,
+                created_at: user.created_at,
+            };
+            Ok(Json(profile))
+        }
+        Err(err) => Err(NetworkResponse::InternalServerError(format!(
+            "Failed to find user: {}",
+            err
+        ))),
+    }
+}
 
 #[post("/register", data = "<new_user>")]
 pub async fn register(
     conn: LogsDbConn,
     new_user: Json<NewUser>,
-    cookies: &CookieJar<'_>,
-) -> Result<Redirect, NetworkResponse> {
+) -> Result<Json<AuthResponse>, NetworkResponse> {
+    new_user.validate().map_err(|err| {
+        let validation_errors = err.field_errors();
+
+        NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
+    })?;
     let result = User::create(new_user.into_inner(), &conn).await;
 
     match result {
         Ok(user) => match create_jwt(user.id) {
             Ok(token) => {
-                cookies.add_private(
-                    Cookie::build("jwt", token)
-                        .http_only(true)
-                        .same_site(SameSite::Strict)
-                        .finish(),
-                );
-                Ok(Redirect::to("/"))
+                let auth_response = AuthResponse {
+                    username: user.username,
+                    email: user.email,
+                    name: user.name,
+                    profile_picture: user.profile_picture,
+                    jwt: token,
+                };
+                Ok(Json(auth_response))
             }
-            Err(err) => {
-                eprintln!("JWT token generation error: {:?}", err);
-                Err(NetworkResponse::InternalServerError(
-                    "Failed to generate JWT token".to_string(),
-                ))
-            }
+            Err(e) => Err(NetworkResponse::InternalServerError(format!(
+                "Failed to create JWT: {}",
+                e
+            ))),
         },
         Err(_) => Err(NetworkResponse::BadRequest(
             "Failed to register user".to_string(),
@@ -46,40 +76,42 @@ pub async fn register(
 pub async fn login(
     conn: LogsDbConn,
     login_user: Json<LoginUser>,
-    cookies: &CookieJar<'_>,
-) -> Result<Redirect, NetworkResponse> {
-    let result =
-        User::find_by_login(login_user.login.clone(), login_user.password.clone(), &conn).await;
+) -> Result<Json<AuthResponse>, NetworkResponse> {
+    login_user.validate().map_err(|err| {
+        let validation_errors = err.field_errors();
+
+        NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
+    })?;
+    let result = User::login(login_user.user.clone(), login_user.password.clone(), &conn).await;
 
     match result {
         Ok(user) => match create_jwt(user.id) {
             Ok(token) => {
-                cookies.add_private(
-                    Cookie::build("jwt", token)
-                        .http_only(true)
-                        .same_site(SameSite::Strict)
-                        .finish(),
-                );
-                Ok(Redirect::to("/"))
+                let auth_response = AuthResponse {
+                    username: user.username,
+                    email: user.email,
+                    name: user.name,
+                    profile_picture: user.profile_picture,
+                    jwt: token,
+                };
+                Ok(Json(auth_response))
             }
-            Err(err) => {
-                eprintln!("JWT token generation error: {:?}", err);
-                Err(NetworkResponse::InternalServerError(
-                    "Failed to generate JWT token".to_string(),
-                ))
-            }
+            Err(e) => Err(NetworkResponse::InternalServerError(format!(
+                "Failed to create JWT: {}",
+                e
+            ))),
         },
         Err(_) => Err(NetworkResponse::Unauthorized(
             "Failed to authorize access".to_string(),
         )),
     }
 }
+
 #[post("/auth/google", data = "<access_token>")]
 pub async fn google_callback(
     access_token: Json<AccessToken>,
     conn: LogsDbConn,
-    cookies: &CookieJar<'_>,
-) -> Result<Json<ResponseBody>, NetworkResponse> {
+) -> Result<Json<AuthResponse>, NetworkResponse> {
     // Build the request client.
     let client = reqwest::Client::builder().build().unwrap();
 
@@ -95,36 +127,42 @@ pub async fn google_callback(
             if response.status().is_success() {
                 let google_user: GoogleUserInfo = response.json().await.unwrap();
 
-                let email = google_user.email.clone();
+                let google_email = google_user.email.clone();
 
                 // The user's email is used as the unique identifier for the user.
-                // Use the user's email to check if the user already exists in your database.
-                let mut user = User::find_by_email(email, &conn).await.unwrap();
+                // Check if the user already exists in the database.
+                let mut user = User::find_by_email(google_email, &conn).await.unwrap();
 
-                // If the user does not exist, create a new user in your database.
+                // If the user does not exist, create a new user in the database.
                 if user.is_none() {
+                    let random_password: String = rand::thread_rng()
+                        .sample_iter(&Alphanumeric)
+                        .take(16)
+                        .map(char::from)
+                        .collect();
                     let new_user = NewUser {
                         username: None,
                         email: google_user.email,
-                        password_hash: "NotNeeded".to_string(), // Password isn't needed for OAuth
+                        password_hash: random_password,
                     };
                     user = Some(User::create(new_user, &conn).await.unwrap());
                 }
 
-                // Generate a JWT for the user using your create_jwt function.
-                let jwt_result = create_jwt(user.unwrap().id);
+                let user = user.unwrap();
+                // Generate a JWT
+                let jwt_result = create_jwt(user.id);
 
                 // Handle possible JWT creation error
                 match jwt_result {
                     Ok(token) => {
-                        // Set a cookie with the JWT.
-                        cookies.add_private(
-                            Cookie::build("jwt", token.clone())
-                                .http_only(true)
-                                .same_site(SameSite::Strict)
-                                .finish(),
-                        );
-                        Ok(Json(ResponseBody::AuthToken(token)))
+                        let auth_response = AuthResponse {
+                            username: user.username,
+                            email: user.email,
+                            name: user.name,
+                            profile_picture: user.profile_picture,
+                            jwt: token,
+                        };
+                        Ok(Json(auth_response))
                     }
                     Err(e) => Err(NetworkResponse::InternalServerError(format!(
                         "Failed to create JWT: {}",
@@ -141,4 +179,116 @@ pub async fn google_callback(
             "Failed to verify access token".to_string(),
         )),
     }
+}
+
+#[put("/profile/update", data = "<update_user_dto>")]
+pub async fn update_profile(
+    conn: LogsDbConn,
+    key: Result<Jwt, NetworkResponse>,
+    update_user_dto: Json<UserDTO>,
+) -> Result<Json<UserDetails>, NetworkResponse> {
+    let user_id = key?.claims.subject_id;
+
+    // Validate the update_user_dto
+    update_user_dto.validate().map_err(|err| {
+        let validation_errors = err.field_errors();
+
+        NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
+    })?;
+
+    let changes = UserChanges {
+        username: update_user_dto.username.clone(),
+        email: update_user_dto.email.clone(),
+        name: update_user_dto.name.clone(),
+        profile_picture: update_user_dto.profile_picture.clone(),
+    };
+
+    match conn
+        .run(move |c| {
+            diesel::update(users::table.find(user_id))
+                .set(&changes)
+                .execute(c)
+        })
+        .await
+    {
+        Ok(_) => {
+            // Fetch the updated user by ID
+            let updated_user_result = conn
+                .run(move |c| users::table.filter(users::id.eq(&user_id)).first::<User>(c))
+                .await;
+
+            match updated_user_result {
+                Ok(updated_user) => {
+                    let user_details = UserDetails {
+                        username: updated_user.username,
+                        email: Some(updated_user.email),
+                        name: updated_user.name,
+                        profile_picture: updated_user.profile_picture,
+                        created_at: updated_user.created_at,
+                    };
+                    Ok(Json(user_details))
+                }
+                Err(err) => Err(NetworkResponse::InternalServerError(format!(
+                    "Failed to find updated user: {}",
+                    err
+                ))),
+            }
+        }
+        Err(err) => Err(NetworkResponse::InternalServerError(format!(
+            "Failed to update user: {}",
+            err
+        ))),
+    }
+}
+
+#[put("/profile/update/password", data = "<update_password>")]
+pub async fn update_password(
+    conn: LogsDbConn,
+    key: Result<Jwt, NetworkResponse>,
+    update_password: Json<UpdatePassword>,
+) -> Result<Json<UserDetails>, NetworkResponse> {
+    let user_id = key?.claims.subject_id;
+
+    let current_user = conn
+        .run(move |c| users::table.find(user_id).first::<User>(c))
+        .await
+        .map_err(|err| {
+            NetworkResponse::InternalServerError(format!("Failed to find user: {}", err))
+        })?;
+
+    // Verify old password
+    match current_user.verify_password(&update_password.old_password) {
+        Ok(true) => (),
+        Ok(false) => {
+            return Err(NetworkResponse::Unauthorized(
+                "Old password does not match".to_string(),
+            ))
+        }
+        Err(err) => return Err(NetworkResponse::InternalServerError(err.to_string())),
+    }
+    // Hash new password
+    let new_hashed_password = User::hash_password(&update_password.new_password)
+        .map_err(|err| NetworkResponse::InternalServerError(err.to_string()))?;
+
+    // Update the user's password in the database
+    conn.run(move |c| {
+        diesel::update(users::table.find(user_id))
+            .set(users::password_hash.eq(new_hashed_password))
+            .execute(c)
+    })
+    .await
+    .map_err(|err| {
+        NetworkResponse::InternalServerError(format!("Failed to update password: {}", err))
+    })?;
+
+    // Fetch the updated user's details
+    let updated_user_details = UserDetails {
+        username: current_user.username,
+        email: Some(current_user.email),
+        name: current_user.name,
+        profile_picture: current_user.profile_picture,
+        created_at: current_user.created_at,
+    };
+
+    Ok(Json(updated_user_details))
 }

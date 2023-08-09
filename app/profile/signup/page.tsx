@@ -2,18 +2,78 @@
 import { Button, Label, TextInput, Checkbox } from "flowbite-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import { redirect } from "next/navigation";
+import { Spinner } from "flowbite-react";
 
 export default function SignupForm() {
   const { data: session } = useSession();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    repeatPassword: "",
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (session) {
       redirect("/profile");
     }
   }, [session]);
+
+  const handleChange = (e: { target: { name: any; value: any } }) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.repeatPassword) {
+      setErrorMessage("Passwords do not match!");
+      return;
+    }
+    setLoading(true); // Start loading spinner
+
+    try {
+      const response = await fetch("https://we-lift.onrender.com/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: null,
+          email: formData.email,
+          password_hash: formData.password,
+        }),
+      });
+      console.log(response);
+
+      if (response.ok) {
+        console.log("Success");
+        // Sign in the user with the same credentials
+        const result = await signIn("credentials", {
+          redirect: false,
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (result?.error) {
+          // Handle login error
+          setErrorMessage(result.error);
+        } else {
+          // Redirect to completion page or wherever you'd like them to go post-login
+          window.location.href = "/profile/signup/completion";
+        }
+      } else {
+        const errorData = await response.json();
+        console.log("Error Data", errorData);
+        setErrorMessage(errorData.message || "Failed to register user");
+      }
+    } finally {
+      setLoading(false); // Stop loading spinner
+    }
+  };
 
   return (
     <section>
@@ -51,6 +111,8 @@ export default function SignupForm() {
                   id="email"
                   placeholder="name@company.com"
                   required
+                  value={formData.email}
+                  onChange={handleChange}
                 />
               </div>
               <div>
@@ -66,21 +128,25 @@ export default function SignupForm() {
                   id="password"
                   placeholder="••••••••"
                   required
+                  value={formData.password}
+                  onChange={handleChange}
                 />
               </div>
               <div>
                 <Label
-                  htmlFor="repeat-password"
+                  htmlFor="repeatPassword"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Confirm Password
                 </Label>
                 <TextInput
                   type="password"
-                  name="repeat-password"
-                  id="repeat-password"
+                  name="repeatPassword"
+                  id="repeatPassword"
                   placeholder="••••••••"
                   required
+                  value={formData.repeatPassword}
+                  onChange={handleChange}
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -107,8 +173,17 @@ export default function SignupForm() {
               <Button
                 type="submit"
                 className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                onClick={handleSubmit}
+                disabled={loading}
               >
-                Sign up
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <Spinner color="gray" size="sm" />
+                    <span className="pl-3">Signing up...</span>
+                  </div>
+                ) : (
+                  "Sign up"
+                )}
               </Button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Already have an account?{" "}
@@ -120,6 +195,7 @@ export default function SignupForm() {
                 </Link>
               </p>
             </form>
+            {errorMessage && <div className="text-red-500">{errorMessage}</div>}
           </div>
         </div>
       </div>

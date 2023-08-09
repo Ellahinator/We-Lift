@@ -25,7 +25,7 @@ export default function Header() {
             label={
               <Avatar
                 alt="User settings"
-                img={session.user?.image || "/logo.png"}
+                img={session.user?.image || "/avatar.svg"}
                 rounded
               />
             }
@@ -37,7 +37,7 @@ export default function Header() {
               </span>
             </Dropdown.Header>
             <Dropdown.Item>
-              <Link href="/dashboard"> Dashboard</Link>
+              <Link href="/profile"> Profile</Link>
             </Dropdown.Item>
             <Dropdown.Item>Settings</Dropdown.Item>
             <Dropdown.Divider />
@@ -46,22 +46,19 @@ export default function Header() {
             </Dropdown.Item>
           </Dropdown>
         ) : (
-          <Button
-            href="/profile"
-            className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
-          >
-            Sign in
-          </Button>
+          // <Button
+          //   href="/profile"
+          //   className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
+          // >
+          //   Sign in
+          // </Button>
+          <></>
         ))}
     </div>
   );
   return (
     <Flowbite>
-      <Navbar
-        fluid
-        className="dark:bg-gray-800 bg-gray-100 shadow-sm dark:shadow-none"
-        border
-      >
+      <Navbar fluid className="dark:bg-gray-900 bg-gray-100">
         <div className="flex w-full justify-between">
           <div className="flex">
             <Navbar.Brand href="/">
@@ -81,45 +78,7 @@ export default function Header() {
               </span>
             </Navbar.Brand>
           </div>
-          <div className="flex items-center">
-            <Navbar.Collapse>
-              <Navbar.Link
-                active
-                href="/"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
-              >
-                <p>Home</p>
-              </Navbar.Link>
-              <Navbar.Link
-                active
-                href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
-              >
-                About
-              </Navbar.Link>
-              <Navbar.Link
-                active
-                href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
-              >
-                Services
-              </Navbar.Link>
-              <Navbar.Link
-                active
-                href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
-              >
-                Pricing
-              </Navbar.Link>
-              <Navbar.Link
-                active
-                href="#"
-                className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
-              >
-                Contact
-              </Navbar.Link>
-            </Navbar.Collapse>
-          </div>
+
           <div className="flex items-center">
             {authElement}
             <DarkThemeToggle className=" ml-4" />
