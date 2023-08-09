@@ -59,12 +59,9 @@ export const authOptions: NextAuthOptions = {
           // Extract and assign the custom token from the backend
           const data = await response.json();
           if (data?.AuthToken) {
-            token.jwt = data.AuthToken;
+            token.jwt = data.jwt;
+            token.username = data.username;
             token.provider = account.provider;
-            // TODO: uncomment after changing the backend response. remove above after.
-            // token.jwt = data.jwt;
-            // token.username = data.username;
-            // token.provider = account.provider;
           }
         } catch (error) {
           console.error("Error calling backend:", error);
