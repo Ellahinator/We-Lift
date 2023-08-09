@@ -25,9 +25,7 @@ export const authOptions: NextAuthOptions = {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(credentialDetails),
         });
-        console.log("CredentialsProvider Response", resp);
         const user = await resp.json();
-        console.log("CredentialsProvider User", user);
         if (user) {
           return user;
         } else {
@@ -60,12 +58,13 @@ export const authOptions: NextAuthOptions = {
 
           // Extract and assign the custom token from the backend
           const data = await response.json();
-          console.log("Data", data);
           if (data?.AuthToken) {
-            console.log("Token before", token);
             token.jwt = data.AuthToken;
             token.provider = account.provider;
-            console.log("Token after", token);
+            // TODO: uncomment after changing the backend response. remove above after.
+            // token.jwt = data.jwt;
+            // token.username = data.username;
+            // token.provider = account.provider;
           }
         } catch (error) {
           console.error("Error calling backend:", error);
@@ -73,16 +72,13 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (account?.provider === "credentials") {
-        console.log("Credentials Account", account);
         if (user) {
-          console.log("Credentials User", user);
           token.jwt = user.jwt;
           token.username = user.username;
           token.email = user.email;
           token.provider = account.provider;
           token.name = user.name;
           token.image = user.profile_pic;
-          console.log("Token", token);
         }
       }
       if (trigger === "update" && session?.name) {
@@ -94,13 +90,11 @@ export const authOptions: NextAuthOptions = {
     },
     session: async ({ session, token, user }) => {
       if (token) {
-        console.log("Session Token", token);
         session.user.email = token.email;
         session.user.provider = token.provider as string;
         session.user.jwt = token.jwt as string;
         session.user.name = token.name as string;
         session.user.username = token.username as string;
-        console.log("Session", session);
       }
       return session;
     },
