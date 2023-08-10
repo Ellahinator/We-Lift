@@ -72,7 +72,7 @@ export default function Header() {
               />
               <span className="self-center whitespace-nowrap text-xl font-semibold dark:text-gray-100">
                 We{" "}
-                <span className="text-primary-700 dark:text-primary-400">
+                <span className="text-primary-600 dark:text-primary-400">
                   Lift
                 </span>
               </span>

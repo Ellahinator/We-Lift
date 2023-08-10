@@ -1,13 +1,15 @@
 "use client";
 import { Label, Spinner, TextInput } from "flowbite-react";
 import { useSession } from "next-auth/react";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { HiMail } from "react-icons/hi";
 
 export default function ProfileCompletion() {
   const { data: session, update, status } = useSession();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
 
   const updateUserProfile = async (fullName: string, username: string) => {
     try {
@@ -26,6 +28,7 @@ export default function ProfileCompletion() {
       if (!response.ok) {
         // Handle error
         const errorData = await response.json();
+        setError(errorData.message);
         throw new Error(errorData.message || "Failed to update profile");
       }
 
@@ -33,6 +36,7 @@ export default function ProfileCompletion() {
       return data;
     } catch (error: any) {
       console.error(error);
+      setError(error.message);
       return { error: error.message };
     }
   };
@@ -46,11 +50,13 @@ export default function ProfileCompletion() {
 
     if (res) {
       console.log("Success");
+      setError("");
       // Redirect to dashboard or welcome page if successful
       // Update the session on the client side with the new name and username
       await update({ name: fullName, username: username });
       window.location.href = "/profile";
     } else {
+      setError("An unexpected error occurred. Please try again later.");
       console.log("Error");
     }
   };
@@ -66,6 +72,7 @@ export default function ProfileCompletion() {
   return (
     <div className="flex justify-center">
       <div className="m-8 bg-white border border-gray-200 rounded-lg shadow-sm dark:border-gray-700 sm:p-6 dark:bg-gray-800 w-1/2 max-w-2xl">
+        {error && <p className="text-red-500">{error}</p>}
         <form onSubmit={handleSubmit}>
           <h3 className="mb-6 text-xl font-semibold dark:text-white">
             User Information
@@ -100,7 +107,6 @@ export default function ProfileCompletion() {
                 placeholder="Doe"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                required
               />
             </div>
             <div>
@@ -111,11 +117,11 @@ export default function ProfileCompletion() {
                 Username
               </Label>
               <TextInput
+                addon="@"
                 type="text"
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                required
               />
             </div>
             <div>
@@ -126,6 +132,7 @@ export default function ProfileCompletion() {
                 Email
               </Label>
               <TextInput
+                icon={HiMail}
                 type="email"
                 id="visitors"
                 placeholder={session?.user.email || ""}
