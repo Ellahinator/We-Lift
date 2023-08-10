@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { Spinner } from "flowbite-react";
 
 export default function SignupForm() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -75,6 +75,13 @@ export default function SignupForm() {
     }
   };
 
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center mt-64 h-screen">
+        <Spinner aria-label="Loading" color="purple" />
+      </div>
+    );
+  }
   return (
     <section>
       <div className="flex flex-col items-center mt-8 px-6 py-8 mx-auto md:h-screen lg:py-0">
