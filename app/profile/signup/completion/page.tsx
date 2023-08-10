@@ -1,10 +1,10 @@
 "use client";
-import { Label, TextInput } from "flowbite-react";
+import { Label, Spinner, TextInput } from "flowbite-react";
 import { useSession } from "next-auth/react";
 import { useRef, useState } from "react";
 
 export default function ProfileCompletion() {
-  const { data: session, update } = useSession();
+  const { data: session, update, status } = useSession();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -54,6 +54,14 @@ export default function ProfileCompletion() {
       console.log("Error");
     }
   };
+
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center mt-64 h-screen">
+        <Spinner aria-label="Loading" color="purple" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center">
