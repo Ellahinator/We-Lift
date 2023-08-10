@@ -6,6 +6,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { redirect } from "next/navigation";
 import { Spinner } from "flowbite-react";
+import { HiMail } from "react-icons/hi";
 
 export default function SignupForm() {
   const { data: session, status } = useSession();
@@ -17,11 +18,35 @@ export default function SignupForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Password Checklist
+  const [validLength, setValidLength] = useState(false);
+  const [hasUppercase, setHasUppercase] = useState(false);
+  const [hasLowercase, setHasLowercase] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSymbol, setHasSymbol] = useState(false);
+
   useEffect(() => {
     if (session) {
       redirect("/profile");
     }
   }, [session]);
+
+  const validatePassword = (password: string) => {
+    // Validate length
+    const validLength = password.length >= 6;
+    // Use regex to validate requirements
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(password);
+
+    // Update state
+    setValidLength(validLength);
+    setHasUppercase(hasUppercase);
+    setHasLowercase(hasLowercase);
+    setHasNumber(hasNumber);
+    setHasSymbol(hasSymbol);
+  };
 
   const handleChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
@@ -96,9 +121,12 @@ export default function SignupForm() {
             height={32}
             className="mr-2"
           />
-          We Lift
+          <p>
+            We{" "}
+            <span className="text-primary-600 dark:text-primary-400">Lift</span>
+          </p>
         </Link>
-        <div className="w-full bg-white rounded-lg shadow dark:shadow-primary-950  md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:bg-opacity-30">
+        <div className="max-w-xl bg-white rounded-lg shadow dark:shadow-primary-950  md:mt-0  xl:p-0 dark:bg-gray-800 dark:bg-opacity-30">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
               Create your account
@@ -109,10 +137,10 @@ export default function SignupForm() {
                   htmlFor="email"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
-                  {" "}
-                  Your email{" "}
+                  Your email
                 </Label>
                 <TextInput
+                  icon={HiMail}
                   type="email"
                   name="email"
                   id="email"
@@ -136,7 +164,10 @@ export default function SignupForm() {
                   placeholder="••••••••"
                   required
                   value={formData.password}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    validatePassword(e.target.value);
+                  }}
                 />
               </div>
               <div>
@@ -155,6 +186,152 @@ export default function SignupForm() {
                   value={formData.repeatPassword}
                   onChange={handleChange}
                 />
+              </div>
+              {/* Password Checklist */}
+              <div id="password-checklist" className="p-1 space-y-2 text-sm">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  Must have at least 6 characters and an uppercase letter
+                </h3>
+                <ul>
+                  <li className="flex items-center mb-1">
+                    {validLength ? (
+                      <svg
+                        className="w-4 h-4 mr-2 text-green-400 dark:text-green-500"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    )}
+                    <p className=" text-gray-800 dark:text-white">
+                      Minimum 6 characters
+                    </p>
+                  </li>
+                  <li className="flex items-center mb-1">
+                    {hasUppercase ? (
+                      <svg
+                        className="w-4 h-4 mr-2 text-green-400 dark:text-green-500"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    )}
+                    <p className=" text-gray-800 dark:text-white">
+                      Uppercase letter
+                    </p>
+                  </li>
+                  <h3 className="font-medium pt-4 text-gray-900 dark:text-white">
+                    It's better to have:
+                  </h3>
+                  <li className="flex items-center mb-1 mt-1">
+                    {hasNumber ? (
+                      <svg
+                        className="w-4 h-4 mr-2 text-green-400 dark:text-green-500"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    )}
+                    <p className=" text-gray-800 dark:text-white">A number</p>
+                  </li>
+                  <li className="flex items-center mb-1">
+                    {hasSymbol ? (
+                      <svg
+                        className="w-4 h-4 mr-2 text-green-400 dark:text-green-500"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-4 h-4 mr-2 text-gray-300 dark:text-gray-400"
+                        aria-hidden="true"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    )}
+
+                    <p className=" text-gray-800 dark:text-white">
+                      Symbols{" ( e.g. !@#$% )"}
+                    </p>
+                  </li>
+                </ul>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-start">
