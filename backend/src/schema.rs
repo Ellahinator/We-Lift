@@ -7,7 +7,7 @@ diesel::table! {
         #[max_length = 255]
         food -> Varchar,
         calories -> Int4,
-        date -> Timestamp,
+        date -> Date,
     }
 }
 
@@ -19,7 +19,7 @@ diesel::table! {
         exercise -> Varchar,
         repetitions -> Int4,
         sets -> Int4,
-        date -> Timestamp,
+        date -> Date,
     }
 }
 
@@ -35,6 +35,7 @@ diesel::table! {
 diesel::table! {
     user_privacy_settings (user_id) {
         user_id -> Int4,
+        profile_public -> Nullable<Bool>,
         weight_progress_public -> Nullable<Bool>,
         exercise_progress_public -> Nullable<Bool>,
         calorie_tracker_public -> Nullable<Bool>,
