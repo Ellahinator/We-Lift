@@ -53,8 +53,8 @@ pub async fn register(
         Ok(user) => match create_jwt(user.id) {
             Ok(token) => {
                 let auth_response = AuthResponse {
-                    username: user.username,
-                    email: user.email,
+                    username: None,
+                    email: user.email.to_lowercase(),
                     name: user.name,
                     profile_picture: user.profile_picture,
                     jwt: token,
@@ -82,7 +82,12 @@ pub async fn login(
 
         NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
     })?;
-    let result = User::login(login_user.user.clone(), login_user.password.clone(), &conn).await;
+    let result = User::login(
+        login_user.user.to_lowercase().clone(),
+        login_user.password.clone(),
+        &conn,
+    )
+    .await;
 
     match result {
         Ok(user) => match create_jwt(user.id) {
@@ -127,7 +132,7 @@ pub async fn google_callback(
             if response.status().is_success() {
                 let google_user: GoogleUserInfo = response.json().await.unwrap();
 
-                let google_email = google_user.email.clone();
+                let google_email = google_user.email.clone().to_lowercase();
 
                 // The user's email is used as the unique identifier for the user.
                 // Check if the user already exists in the database.
@@ -142,7 +147,7 @@ pub async fn google_callback(
                         .collect();
                     let new_user = NewUser {
                         username: None,
-                        email: google_user.email,
+                        email: google_user.email.to_lowercase(),
                         password_hash: random_password,
                     };
                     user = Some(User::create(new_user, &conn).await.unwrap());
@@ -196,9 +201,19 @@ pub async fn update_profile(
         NetworkResponse::BadRequest(format!("Validation error: {:?}", validation_errors))
     })?;
 
+    let username = update_user_dto
+        .username
+        .clone()
+        .map(|username| username.to_lowercase());
+
+    let email = update_user_dto
+        .email
+        .clone()
+        .map(|email| email.to_lowercase());
+
     let changes = UserChanges {
-        username: update_user_dto.username.clone(),
-        email: update_user_dto.email.clone(),
+        username,
+        email,
         name: update_user_dto.name.clone(),
         profile_picture: update_user_dto.profile_picture.clone(),
     };
