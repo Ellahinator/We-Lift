@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "flowbite-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { HiOutlineArrowRight } from "react-icons/hi";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
