@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { Button } from "flowbite-react";
+import { Link } from "react-router-dom";
+import { HiOutlineArrowRight } from "react-icons/hi";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -124,6 +127,21 @@ export default function ExerciseProgress() {
             This is a sample graph for exercise progress.
           </p>
         </div>
+      </div>
+      <div className="flex justify-center">
+        <Button
+          as={Link}
+          // href="/edit/exercise"
+          href="#"
+          outline
+          pill
+          size="xs"
+          color="dark"
+          className="w-1/2"
+        >
+          <p className="flex items-center">Edit</p>
+          <HiOutlineArrowRight className="ml-2 h-5 w-5" />
+        </Button>
       </div>
     </div>
   );
