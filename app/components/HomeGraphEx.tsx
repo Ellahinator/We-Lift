@@ -1,9 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { HiOutlineArrowRight } from "react-icons/hi";
-import { Button } from "flowbite-react";
-import Link from "next/link";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -68,18 +65,6 @@ export default function HomeGraphEx() {
           "07 May",
           "14 May",
           "21 May",
-          "28 May",
-          "04 Jun",
-          "11 Jun",
-          "18 Jun",
-          "25 Jun",
-          "02 Jul",
-          "09 Jul",
-          "16 Jul",
-          "23 Jul",
-          "30 Jul",
-          "06 Aug",
-          "13 Aug",
         ],
       },
       series: [
@@ -88,8 +73,7 @@ export default function HomeGraphEx() {
           data: [
             159.4, 158.6, 162.4, 163.0, 164.4, 164.6, 165.2, 164.6, 164.6,
             164.6, 164.8, 166.0, 162.8, 160.0, 160.4, 159.2, 158.8, 157.8,
-            159.4, 160.0, 161.4, 161.2, 162.0, 162.2, 162.4, 164.4, 164.4,
-            164.4, 164.4, 164.8, 166.4, 167.2, 166.8,
+            159.4, 160.0, 161.4,
           ],
           color: "#818cf8",
         },

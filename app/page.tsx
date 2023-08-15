@@ -32,7 +32,7 @@ export default function HomePage() {
                 <path
                   fillRule="evenodd"
                   d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                  clip-rule="evenodd"
+                  clipRule="evenodd"
                 ></path>
               </svg>
             </a>
@@ -43,7 +43,7 @@ export default function HomePage() {
               Learn more
             </a>
           </div>
-          <div className="hidden lg:mt-0 lg:col-span-5 lg:flex p-6 rounded-lg dark:bg-opacity-20">
+          <div className="lg:mt-0 lg:col-span-5 lg:flex p-6 rounded-lg dark:bg-opacity-20">
             <HomeGraphEx />
           </div>
         </div>
