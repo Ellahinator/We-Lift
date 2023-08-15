@@ -69,7 +69,7 @@ pub async fn get_weight_data(
     let data_points: Vec<DataPoint> = weight_data
         .iter()
         .map(|w| DataPoint {
-            date: w.date.format("%d %b").to_string(),
+            date: w.date.to_string(),
             weight: w.weight,
         })
         .collect();

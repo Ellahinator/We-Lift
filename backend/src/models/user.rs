@@ -103,7 +103,7 @@ impl User {
 
         let user = NewUser {
             username: new_user.username,
-            email: new_user.email,
+            email: new_user.email.to_lowercase(),
             password_hash,
         };
 
