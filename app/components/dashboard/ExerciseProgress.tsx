@@ -7,12 +7,6 @@ import { HiOutlineArrowRight } from "react-icons/hi";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-interface ISeries {
-  name: string;
-  data: number[];
-  color: string;
-}
-
 export default function ExerciseProgress() {
   const [chartOptions, setChartOptions] = useState({
     // other options same as before
@@ -35,7 +29,7 @@ export default function ExerciseProgress() {
     yaxis: {
       labels: {
         formatter: function (val: number, index: any) {
-          return val.toFixed(2); // Changed to two decimal places for weight
+          return val + "lbs"; // Changed to two decimal places for weight
         },
         style: {
           fontFamily: "Inter, sans-serif",
@@ -138,6 +132,7 @@ export default function ExerciseProgress() {
           size="xs"
           color="dark"
           className="w-1/2"
+          disabled
         >
           <p className="flex items-center">Edit</p>
           <HiOutlineArrowRight className="ml-2 h-5 w-5" />

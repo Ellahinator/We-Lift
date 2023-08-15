@@ -7,7 +7,7 @@ import Link from "next/link";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function WeightGraph() {
+export default function HomeGraphEx() {
   const [chartOptions, setChartOptions] = useState({
     // other options same as before
     xaxis: {
@@ -106,31 +106,6 @@ export default function WeightGraph() {
           type="line"
           height={"100%"}
         />
-      </div>
-      <div className="flex items-center justify-between p-2">
-        <div className="flex flex-col gap-4 p-4">
-          <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Weight Progress
-          </h5>
-          <p className="font-normal text-gray-700 dark:text-gray-400">
-            This graph represents your weight progress over time. Keep up the
-            good work!
-          </p>
-        </div>
-      </div>
-      <div className="flex justify-center">
-        <Button
-          as={Link}
-          href="/edit/weight"
-          outline
-          pill
-          size="xs"
-          color="dark"
-          className="w-1/2"
-        >
-          <p className="flex items-center">Edit</p>
-          <HiOutlineArrowRight className="ml-2 h-5 w-5" />
-        </Button>
       </div>
     </div>
   );
