@@ -4,9 +4,24 @@ import dynamic from "next/dynamic";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function HomeGraphEx() {
+export default function CalorieIntakeEx() {
   const [chartOptions, setChartOptions] = useState({
-    // other options same as before
+    chart: {
+      toolbar: {
+        show: true,
+        offsetX: 0,
+        offsetY: 0,
+        tools: {
+          download: false,
+          selection: true,
+          zoom: false,
+          zoomin: true,
+          zoomout: true,
+          reset: false,
+          pan: false,
+        },
+      },
+    },
     xaxis: {
       categories: [] as string[],
       labels: {
@@ -25,8 +40,8 @@ export default function HomeGraphEx() {
     },
     yaxis: {
       labels: {
-        formatter: function (val: number, index: any) {
-          return val.toFixed(1) + "lbs"; // Changed to one decimal place for weight
+        formatter: function (val: any, index: any) {
+          return val + "kcal";
         },
         style: {
           fontFamily: "Inter, sans-serif",
@@ -44,38 +59,20 @@ export default function HomeGraphEx() {
       xaxis: {
         ...chartOptions.xaxis,
         categories: [
-          "01 Jan",
-          "08 Jan",
-          "15 Jan",
-          "22 Jan",
-          "29 Jan",
-          "05 Feb",
-          "12 Feb",
-          "19 Feb",
-          "26 Feb",
-          "05 Mar",
-          "12 Mar",
-          "19 Mar",
-          "26 Mar",
-          "02 Apr",
-          "09 Apr",
-          "16 Apr",
-          "23 Apr",
-          "30 Apr",
-          "07 May",
-          "14 May",
-          "21 May",
-        ],
+          "01 Aug",
+          "02 Aug",
+          "03 Aug",
+          "04 Aug",
+          "05 Aug",
+          "06 Aug",
+          "07 Aug",
+        ], // Dates for a week in August
       },
       series: [
         {
-          name: "Weight",
-          data: [
-            159.4, 158.6, 162.4, 163.0, 164.4, 164.6, 165.2, 164.6, 164.6,
-            164.6, 164.8, 166.0, 162.8, 160.0, 160.4, 159.2, 158.8, 157.8,
-            159.4, 160.0, 161.4,
-          ],
-          color: "#818cf8",
+          name: "Calorie Intake",
+          data: [2020, 2700, 2300, 2000, 3000, 2323, 2727], // Sample weight data for a week
+          color: "#4f46e5",
         },
       ],
     });
@@ -83,11 +80,18 @@ export default function HomeGraphEx() {
 
   return (
     <div className="shadow-lg rounded-2xl p-4 bg-white dark:bg-gray-800 w-full">
+      <div className="flex items-center justify-between p-2">
+        <div className="flex flex-col gap-4 p-4">
+          <h5 className="text-2xl font-semibold tracking-tight text-gray-500 dark:text-gray-200">
+            Calorie Tracker
+          </h5>
+        </div>
+      </div>
       <div className="w-full h-96">
         <Chart
           options={chartOptions}
           series={chartOptions.series}
-          type="line"
+          type="bar"
           height={"100%"}
         />
       </div>
