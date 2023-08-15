@@ -1,14 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { Button } from "flowbite-react";
+import Link from "next/link";
+import { HiOutlineArrowRight } from "react-icons/hi";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
-
-interface ISeries {
-  name: string;
-  data: number[];
-  color: string;
-}
 
 export default function ExerciseProgress() {
   const [chartOptions, setChartOptions] = useState({
@@ -32,7 +29,7 @@ export default function ExerciseProgress() {
     yaxis: {
       labels: {
         formatter: function (val: number, index: any) {
-          return val.toFixed(2); // Changed to two decimal places for weight
+          return val + "lbs"; // Changed to two decimal places for weight
         },
         style: {
           fontFamily: "Inter, sans-serif",
@@ -124,6 +121,22 @@ export default function ExerciseProgress() {
             This is a sample graph for exercise progress.
           </p>
         </div>
+      </div>
+      <div className="flex justify-center">
+        <Button
+          as={Link}
+          // href="/edit/exercise"
+          href="#"
+          outline
+          pill
+          size="xs"
+          color="dark"
+          className="w-1/2"
+          disabled
+        >
+          <p className="flex items-center">Edit</p>
+          <HiOutlineArrowRight className="ml-2 h-5 w-5" />
+        </Button>
       </div>
     </div>
   );

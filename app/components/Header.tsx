@@ -10,9 +10,11 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
 
   const loading = status === "loading";
 
@@ -45,15 +47,14 @@ export default function Header() {
               Sign out
             </Dropdown.Item>
           </Dropdown>
-        ) : (
-          // <Button
-          //   href="/profile"
-          //   className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
-          // >
-          //   Sign in
-          // </Button>
-          <></>
-        ))}
+        ) : pathname === "/" ? (
+          <Button
+            href="/profile"
+            className="h-10 px-2 md:px-3 bg-primary-600 hover:bg-primary-700 focus:outline-none text-white rounded dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:bg-primary-400"
+          >
+            Sign in
+          </Button>
+        ) : null)}
     </div>
   );
   return (

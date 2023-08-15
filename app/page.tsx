@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import HomeGraphEx from "./components/HomeGraphEx";
 
 export default function HomePage() {
   return (
@@ -43,8 +43,8 @@ export default function HomePage() {
               Learn more
             </a>
           </div>
-          <div className="hidden lg:mt-0 lg:col-span-5 lg:flex dark:bg-primary-950 p-6 rounded-lg dark:bg-opacity-20">
-            <Image src="/graph.svg" alt="mockup" width={500} height={500} />
+          <div className="hidden lg:mt-0 lg:col-span-5 lg:flex p-6 rounded-lg dark:bg-opacity-20">
+            <HomeGraphEx />
           </div>
         </div>
       </section>

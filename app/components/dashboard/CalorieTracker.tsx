@@ -1,14 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { Button } from "flowbite-react";
+import Link from "next/link";
+import { HiOutlineArrowRight } from "react-icons/hi";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
-
-interface ISeries {
-  name: string;
-  data: number[];
-  color: string;
-}
 
 export default function CalorieTracker() {
   const [chartOptions, setChartOptions] = useState({
@@ -32,7 +29,7 @@ export default function CalorieTracker() {
     yaxis: {
       labels: {
         formatter: function (val: any, index: any) {
-          return val;
+          return val + "kcal";
         },
         style: {
           fontFamily: "Inter, sans-serif",
@@ -89,6 +86,22 @@ export default function CalorieTracker() {
             good work!
           </p>
         </div>
+      </div>
+      <div className="flex justify-center">
+        <Button
+          as={Link}
+          // href="/edit/calorie-tracker"
+          href="#"
+          outline
+          pill
+          size="xs"
+          color="dark"
+          className="w-1/2"
+          disabled
+        >
+          <p className="flex items-center">Edit</p>
+          <HiOutlineArrowRight className="ml-2 h-5 w-5" />
+        </Button>
       </div>
     </div>
   );
