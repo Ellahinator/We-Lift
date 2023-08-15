@@ -1,5 +1,9 @@
 "use client";
-import HomeGraphEx from "./components/HomeGraphEx";
+import WeightGraphEx from "./components/home/WeightGraphEx";
+import { Carousel } from "flowbite-react";
+import type { CustomFlowbiteTheme } from "flowbite-react";
+import CalorieIntakeEx from "./components/home/CalorieIntakeEx";
+import ExerciseProgressEx from "./components/home/ExerciseProgressEx";
 
 export default function HomePage() {
   return (
@@ -44,7 +48,11 @@ export default function HomePage() {
             </a>
           </div>
           <div className="lg:mt-0 lg:col-span-5 lg:flex p-6 rounded-lg dark:bg-opacity-20">
-            <HomeGraphEx />
+            <Carousel indicators={false} rightControl={" "} leftControl={" "}>
+              <WeightGraphEx />
+              <CalorieIntakeEx />
+              <ExerciseProgressEx />
+            </Carousel>
           </div>
         </div>
       </section>
