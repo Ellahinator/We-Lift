@@ -159,17 +159,22 @@ export default function WeightData() {
           />
         </div>
         <form onSubmit={handleSubmit} className="mt-4">
-          <div>
+          <div className="max-w-xs">
             <Label htmlFor="weight">Weight:</Label>
             <TextInput
               type="number"
               id="weight"
+              min="0"
+              step={0.1}
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.code === "Minus") e.preventDefault();
+              }}
               required
             />
           </div>
-          <div>
+          <div className="max-w-xs">
             <Label htmlFor="date">Date:</Label>
             <TextInput
               type="date"
